@@ -33,7 +33,7 @@ class Scanner extends PureComponent{
     onProcessing: ()=>{},
   }
 
-  componentWillMount(){
+  componentDidMount(){
     const { onPictureTaken, onProcessing } = this.props;
     DeviceEventEmitter.addListener('onPictureTaken', onPictureTaken);
     DeviceEventEmitter.addListener('onProcessingChange', onProcessing);
