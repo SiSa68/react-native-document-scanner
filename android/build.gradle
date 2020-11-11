@@ -5,6 +5,7 @@ def safeExtGet(prop, fallback) {
 
 buildscript {
     repositories {
+        google()
         jcenter()
     }
     dependencies {
