@@ -14,6 +14,9 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
+
 import com.documentscanner.views.OpenNoteCameraView;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.ChecksumException;
@@ -275,6 +278,13 @@ public class ImageProcessor extends Handler {
 
             drawDocumentBox(mPreviewPoints, mPreviewSize);
 
+            
+            // WritableMap data = new WritableNativeMap();
+            // for(int i=0; i<mPreviewPoints.length; i++)
+            //     data.putString("Point", "x: " + mPreviewPoints[i].x + ", y: " + mPreviewPoints[i].y);
+            // data.putString("Size", "width: " + mPreviewSize.width + ", height: " + mPreviewSize.height);
+            // mMainActivity.RNLog(data);
+
             return true;
 
         }
@@ -296,6 +306,14 @@ public class ImageProcessor extends Handler {
 
         float previewWidth = (float) stdSize.height;
         float previewHeight = (float) stdSize.width;
+
+        // WritableMap data = new WritableNativeMap();
+        // data.putString("Point #1", "x: " + (previewWidth - (float) points[0].y) + ", y: " + ((float) points[0].x));
+        // data.putString("Point #2", "x: " + (previewWidth - (float) points[1].y) + ", y: " + ((float) points[1].x));
+        // data.putString("Point #3", "x: " + (previewWidth - (float) points[2].y) + ", y: " + ((float) points[2].x));
+        // data.putString("Point #4", "x: " + (previewWidth - (float) points[3].y) + ", y: " + ((float) points[3].x));
+        // data.putString("Size", "width: " + previewWidth + ", height: " + previewHeight);
+        // mMainActivity.RNLog(data);
 
         path.moveTo(previewWidth - (float) points[0].y, (float) points[0].x);
         path.lineTo(previewWidth - (float) points[1].y, (float) points[1].x);

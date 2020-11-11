@@ -1,5 +1,6 @@
 package com.documentscanner.views;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -7,7 +8,11 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.drawable.shapes.PathShape;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.Size;
@@ -26,6 +31,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -79,8 +85,10 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import java.io.File;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+
 import java.io.ByteArrayOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -128,6 +136,8 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
 
     public interface OnScannerListener {
         void onPictureTaken(WritableMap path);
+
+        void onLog(WritableMap arg);
     }
 
     public interface OnProcessingListener {
@@ -238,16 +248,16 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
             @Override
             public void onManagerConnected(int status) {
                 switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
-                    Log.d(TAG, "SUCCESS init openCV: " + status);
-                    // System.loadLibrary("ndklibrarysample");
-                    enableCameraView();
-                }
+                    case LoaderCallbackInterface.SUCCESS: {
+                        Log.d(TAG, "SUCCESS init openCV: " + status);
+                        // System.loadLibrary("ndklibrarysample");
+                        enableCameraView();
+                    }
                     break;
-                default: {
-                    Log.d(TAG, "ERROR init Opencv: " + status);
-                    super.onManagerConnected(status);
-                }
+                    default: {
+                        Log.d(TAG, "ERROR init Opencv: " + status);
+                        super.onManagerConnected(status);
+                    }
                     break;
                 }
             }
@@ -290,12 +300,72 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
         return this.mFocused;
     }
 
+    private static final int FOCUS_AREA_SIZE = 300;
+
+    private Rect calculateFocusArea(float x, float y) {
+        int left = clamp(Float.valueOf((x / mSurfaceView.getWidth()) * 2000 - 1000).intValue(), FOCUS_AREA_SIZE);
+        int top = clamp(Float.valueOf((y / mSurfaceView.getHeight()) * 2000 - 1000).intValue(), FOCUS_AREA_SIZE);
+
+        return new Rect(left, top, left + FOCUS_AREA_SIZE, top + FOCUS_AREA_SIZE);
+    }
+
+    private int clamp(int touchCoordinateInCameraReper, int focusAreaSize) {
+        int result;
+        if (Math.abs(touchCoordinateInCameraReper) + focusAreaSize / 2 > 1000) {
+            if (touchCoordinateInCameraReper > 0) {
+                result = 1000 - focusAreaSize / 2;
+            } else {
+                result = -1000 + focusAreaSize / 2;
+            }
+        } else {
+            result = touchCoordinateInCameraReper - focusAreaSize / 2;
+        }
+        return result;
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
     public void turnCameraOn() {
         mSurfaceView = (SurfaceView) mView.findViewById(R.id.surfaceView);
         mSurfaceHolder = this.getHolder();
         mSurfaceHolder.addCallback(this);
         mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mSurfaceView.setVisibility(SurfaceView.VISIBLE);
+
+        mSurfaceView.setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (mCamera != null && mSurfaceView != null && event.getAction() == MotionEvent.ACTION_UP) {
+                    Camera.Parameters parameters = mCamera.getParameters();
+                    if (parameters.getMaxNumFocusAreas() > 0) {
+                        Log.i(TAG, "fancy !");
+                        Rect rect = calculateFocusArea(event.getX(), event.getY());
+
+//                        WritableMap data = new WritableNativeMap();
+//                        data.putDouble("event.getX()", event.getX());
+//                        data.putDouble("event.getY()", event.getY());
+//                        data.putInt("Left", rect.left);
+//                        data.putInt("right", rect.right);
+//                        data.putInt("top", rect.top);
+//                        data.putInt("bottom", rect.bottom);
+//                        data.putInt("surface width", mSurfaceView.getWidth());
+//                        data.putInt("surface height", mSurfaceView.getHeight());
+//                        RNLog(data);
+
+                        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                        List<Camera.Area> meteringAreas = new ArrayList<Camera.Area>();
+                        meteringAreas.add(new Camera.Area(rect, 800));
+                        parameters.setFocusAreas(meteringAreas);
+
+                        mCamera.setParameters(parameters);
+                        mCamera.autoFocus(null);
+                    } else {
+                        mCamera.autoFocus(null);
+                    }
+                }
+
+                return true;
+            }
+        });
     }
 
     public void enableCameraView() {
@@ -477,9 +547,7 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
 
         try {
             mCamera.stopPreview();
-        }
-
-        catch (Exception e) {
+        } catch (Exception e) {
         }
 
         try {
@@ -543,14 +611,14 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
     public void blinkScreenAndShutterSound() {
         AudioManager audio = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
         switch (audio.getRingerMode()) {
-        case AudioManager.RINGER_MODE_NORMAL:
-            MediaActionSound sound = new MediaActionSound();
-            sound.play(MediaActionSound.SHUTTER_CLICK);
-            break;
-        case AudioManager.RINGER_MODE_SILENT:
-            break;
-        case AudioManager.RINGER_MODE_VIBRATE:
-            break;
+            case AudioManager.RINGER_MODE_NORMAL:
+                MediaActionSound sound = new MediaActionSound();
+                sound.play(MediaActionSound.SHUTTER_CLICK);
+                break;
+            case AudioManager.RINGER_MODE_SILENT:
+                break;
+            case AudioManager.RINGER_MODE_VIBRATE:
+                break;
         }
     }
 
@@ -671,6 +739,12 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
         endDoc.release();
 
         return fileName;
+    }
+
+    public void RNLog(WritableMap data) {
+        if (this.listener != null) {
+            this.listener.onLog(data);
+        }
     }
 
     public void saveDocument(ScannedDocument scannedDocument) {

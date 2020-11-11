@@ -46,6 +46,11 @@ public class DocumentScannerViewManager extends ViewGroupManager<MainView> {
             public void onPictureTaken(WritableMap data) {
                 dispatchEvent(reactContext, "onPictureTaken", data);
             }
+            
+            @Override
+            public void onLog(WritableMap data) {
+                dispatchEvent(reactContext, "doRNLog", data);
+            }
         });
 
         return view;

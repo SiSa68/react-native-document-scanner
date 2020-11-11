@@ -30,9 +30,14 @@ class PdfScanner extends React.Component {
       const { onPictureTaken, onProcessing } = this.props;
       DeviceEventEmitter.addListener("onPictureTaken", onPictureTaken);
       DeviceEventEmitter.addListener("onProcessingChange", onProcessing);
+      DeviceEventEmitter.addListener("doRNLog", this.doRNLog);
     }
     
     this.getAndroidPermissions();
+  }
+
+  doRNLog = (...args) => {
+    console.log(...args);
   }
 
   async getAndroidPermissions() {
@@ -90,6 +95,7 @@ class PdfScanner extends React.Component {
       const { onPictureTaken, onProcessing } = this.props;
       DeviceEventEmitter.removeListener("onPictureTaken", onPictureTaken);
       DeviceEventEmitter.removeListener("onProcessingChange", onProcessing);
+      DeviceEventEmitter.removeListener("doRNLog", this.doRNLog);
     }
   }
 
