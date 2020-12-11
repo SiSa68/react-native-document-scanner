@@ -21,6 +21,7 @@ import com.documentscanner.helpers.Utils;
 import com.documentscanner.views.HUDCanvasView;
 
 import org.opencv.core.Core;
+import org.opencv.core.Scalar;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -29,6 +30,8 @@ import org.opencv.core.Point;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.CLAHE;
+import org.opencv.photo.Photo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -117,9 +120,11 @@ public class ImageProcessor extends Handler {
 
     }
 
-    private void processPicture(Mat picture) {
+    public void processPicture(Mat picture) {
 
         Mat img = Imgcodecs.imdecode(picture, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
+        Mat originalMat = new Mat();
+        img.copyTo(originalMat);
         picture.release();
 
         Log.d(TAG, "processPicture - imported image " + img.size().width + "x" + img.size().height);
@@ -133,7 +138,7 @@ public class ImageProcessor extends Handler {
 
         mMainActivity.getHUD().clear();
         mMainActivity.invalidateHUD();
-        mMainActivity.saveDocument(doc);
+        mMainActivity.saveDocument(doc, originalMat);
         doc.release();
         picture.release();
 
@@ -144,7 +149,7 @@ public class ImageProcessor extends Handler {
 
     private ScannedDocument detectDocument(Mat inputRgba) {
         ArrayList<MatOfPoint> contours = findContours(inputRgba);
-
+        enhanceDocument(inputRgba);
         ScannedDocument sd = new ScannedDocument(inputRgba);
 
         sd.originalSize = inputRgba.size();
@@ -173,7 +178,6 @@ public class ImageProcessor extends Handler {
             doc = new Mat(inputRgba.size(), CvType.CV_8UC4);
             inputRgba.copyTo(doc);
         }
-        enhanceDocument(doc);
         return sd.setProcessed(doc);
     }
 
@@ -352,7 +356,23 @@ public class ImageProcessor extends Handler {
 
     private void enhanceDocument(Mat src) {
         Imgproc.cvtColor(src, src, Imgproc.COLOR_RGBA2GRAY);
+        //CLAHE clahe = Imgproc.createCLAHE(2.0, new Size(8, 8));
+        //clahe.apply(src, src);
+        //Imgproc.applyColorMap(src, src, Imgproc.COLORMAP_HSV);
         src.convertTo(src, CvType.CV_8UC1, colorGain, colorBias);
+        Imgproc.adaptiveThreshold(src, src, 255, 1, 0, 41, 7);
+        Imgproc.morphologyEx(src, src, Imgproc.MORPH_OPEN, new Mat(1, 1, CvType.CV_8U, Scalar.all(1)));
+        Imgproc.morphologyEx(src, src, Imgproc.MORPH_CLOSE, new Mat(1, 1, CvType.CV_8U, Scalar.all(1)));
+
+        // smoothening
+        /* Imgproc.threshold(src, src, 180, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(src, src, 0, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(src, src, 0, 255, Imgproc.THRESH_OTSU);
+        Imgproc.GaussianBlur(src, src, new Size(1, 1), 0);
+        Imgproc.threshold(src, src, 0, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(src, src, 0, 255, Imgproc.THRESH_OTSU); */
+        
+        //Photo.fastNlMeansDenoising(src, src, 3, 7, 21);
     }
 
     private Mat fourPointTransform(Mat src, Point[] pts) {
@@ -409,8 +429,13 @@ public class ImageProcessor extends Handler {
 
         Imgproc.resize(src, resizedImage, size);
         Imgproc.cvtColor(resizedImage, grayImage, Imgproc.COLOR_RGBA2GRAY, 4);
+        //Imgproc.equalizeHist(grayImage, grayImage);
+        //CLAHE clahe = Imgproc.createCLAHE(2.0, new Size(8, 8));
+        //clahe.apply(grayImage, grayImage);
+        Imgproc.applyColorMap(grayImage, grayImage, Imgproc.COLORMAP_HSV);
         Imgproc.GaussianBlur(grayImage, grayImage, new Size(5, 5), 0);
         Imgproc.Canny(grayImage, cannedImage, 80, 100, 3, false);
+        //Imgproc.Canny(grayImage, cannedImage, 75, 200, 3, false);
 
         ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();

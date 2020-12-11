@@ -38,33 +38,39 @@ public class ScannedDocument {
     }
 
     public WritableMap previewPointsAsHash() {
-        if (this.previewPoints == null) return null;
+        // if (this.previewPoints == null) return null;
         WritableMap rectangleCoordinates = new WritableNativeMap();
+        if (this.originalPoints != null) {
+            WritableMap topLeft = new WritableNativeMap();
+            topLeft.putDouble("x", this.originalPoints[0].x);
+            topLeft.putDouble("y", this.originalPoints[0].y);
 
-        WritableMap topLeft = new WritableNativeMap();
-        topLeft.putDouble("x", this.originalPoints[0].x);
-        topLeft.putDouble("y", this.originalPoints[0].y);
+            WritableMap topRight = new WritableNativeMap();
+            topRight.putDouble("x", this.originalPoints[1].x);
+            topRight.putDouble("y", this.originalPoints[1].y);
 
-        WritableMap topRight = new WritableNativeMap();
-        topRight.putDouble("x", this.originalPoints[1].x);
-        topRight.putDouble("y", this.originalPoints[1].y);
+            WritableMap bottomRight = new WritableNativeMap();
+            bottomRight.putDouble("x", this.originalPoints[2].x);
+            bottomRight.putDouble("y", this.originalPoints[2].y);
 
-        WritableMap bottomRight = new WritableNativeMap();
-        bottomRight.putDouble("x", this.originalPoints[2].x);
-        bottomRight.putDouble("y", this.originalPoints[2].y);
+            WritableMap bottomLeft = new WritableNativeMap();
+            bottomLeft.putDouble("x", this.originalPoints[3].x);
+            bottomLeft.putDouble("y", this.originalPoints[3].y);
 
-        WritableMap bottomLeft = new WritableNativeMap();
-        bottomLeft.putDouble("x", this.originalPoints[3].x);
-        bottomLeft.putDouble("y", this.originalPoints[3].y);
-
-
-
-        rectangleCoordinates.putMap("topLeft", topLeft);
-        rectangleCoordinates.putMap("topRight", topRight);
-        rectangleCoordinates.putMap("bottomRight", bottomRight);
-        rectangleCoordinates.putMap("bottomLeft", bottomLeft);
-
+            rectangleCoordinates.putMap("topLeft", topLeft);
+            rectangleCoordinates.putMap("topRight", topRight);
+            rectangleCoordinates.putMap("bottomRight", bottomRight);
+            rectangleCoordinates.putMap("bottomLeft", bottomLeft);
+        }
+        
         return rectangleCoordinates;
+    }
+
+    public boolean isNetworkRequestNecessary() {
+        if (this.originalPoints == null) {
+            return true;
+        }
+        return false;
     }
 
     public void release() {

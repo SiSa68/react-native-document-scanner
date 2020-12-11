@@ -77,6 +77,8 @@ class PdfScanner extends React.Component<PdfScannerProps> {
   }
 
   componentDidMount () {
+    console.log("before did mount is this here really?")
+    ScannerManager.processPickedImage();
     if (Platform.OS === 'android') {
       const { onPictureTaken, onProcessing } = this.props
       if (onPictureTaken) DeviceEventEmitter.addListener('onPictureTaken', onPictureTaken)
@@ -110,7 +112,9 @@ class PdfScanner extends React.Component<PdfScannerProps> {
   }
 
   capture () {
+    console.log("in capture")
     if (this._scannerHandle) {
+      console.log("in capture in if")
       ScannerManager.capture(this._scannerHandle)
     }
   }

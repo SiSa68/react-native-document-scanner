@@ -1,51 +1,50 @@
 {
-  "name": "@woonivers/react-native-document-scanner",
-  "version": "2.0.1",
-  "description": "Scan documents, automatic border detection, automatic crop",
-  "main": "lib/module/index.js",
-  "types": "lib/typescript/index.d.ts",
-  "files": [
-    "/android",
-    "!/android/build",
-    "/ios",
-    "/src",
-    "/lib",
-    "/*.podspec",
-    "react-native.config.js"
+  "@react-native-community/bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "module",
+      "typescript"
+    ],
+    "files": [
+      "src/"
+    ]
+  },
+  "_from": "@woonivers/react-native-document-scanner",
+  "_id": "@woonivers/react-native-document-scanner@2.1.1",
+  "_inBundle": false,
+  "_integrity": "sha512-DJVRhEOtY8I8RzcG64mmFZqaoRqnpAOjeiI2gU5XnjyIuSkURp5YnfiH21i/fOx/xLPhIuf1MRvEWK1l74F9CQ==",
+  "_location": "/@woonivers/react-native-document-scanner",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@woonivers/react-native-document-scanner",
+    "name": "@woonivers/react-native-document-scanner",
+    "escapedName": "@woonivers%2freact-native-document-scanner",
+    "scope": "@woonivers",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
   ],
-  "scripts": {
-    "test": "jest",
-    "ci:test": "jest --passWithNoTests",
-    "typescript": "tsc --noEmit",
-    "lint": "eslint --ext .js,.ts,.tsx .",
-    "release": "release-it",
-    "example": "yarn --cwd example",
-    "bootstrap": "yarn example && yarn",
-    "prepare": "bob build",
-    "ci:publish": "semantic-release",
-    "semantic-release": "semantic-release"
+  "_resolved": "https://registry.npmjs.org/@woonivers/react-native-document-scanner/-/react-native-document-scanner-2.1.1.tgz",
+  "_shasum": "1e821ad2c8a480c1b1d4f39c30eaad4c4ae0349a",
+  "_spec": "@woonivers/react-native-document-scanner",
+  "_where": "E:\\Burhan\\Projects\\scanaidl",
+  "author": {
+    "name": "Woonivers",
+    "url": "https://woonivers.com"
   },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
-  },
-  "keywords": [
-    "react-native",
-    "react-native-component",
-    "scanner",
-    "ios",
-    "android",
-    "camera"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Woonivers/react-native-document-scanner"
-  },
-  "author": "Woonivers (https://woonivers.com)",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Woonivers/react-native-document-scanner/issues"
   },
-  "homepage": "https://github.com/Woonivers/react-native-document-scanner#readme",
+  "bundleDependencies": false,
+  "deprecated": false,
+  "description": "Scan documents, automatic border detection, automatic crop",
   "devDependencies": {
     "@babel/runtime": "^7.5.5",
     "@commitlint/config-conventional": "^8.0.0",
@@ -77,19 +76,41 @@
     "react-dom": "16.8.3",
     "react-native": "~0.59.8",
     "release-it": "^12.3.0",
-    "typescript": "^3.5.2",
-    "semantic-release": "^15.13.24"
+    "semantic-release": "^15.13.24",
+    "typescript": "^3.5.2"
   },
-  "peerDependencies": {
-    "react": "*",
-    "react-native": "*"
-  },
+  "files": [
+    "/android",
+    "!/android/build",
+    "/ios",
+    "/src",
+    "/lib",
+    "/*.podspec",
+    "react-native.config.js"
+  ],
+  "homepage": "https://github.com/Woonivers/react-native-document-scanner#readme",
   "husky": {
     "hooks": {
       "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
       "pre-commit": "lint-staged"
     }
   },
+  "jest": {
+    "preset": "react-native",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/example/node_modules",
+      "<rootDir>/lib/"
+    ]
+  },
+  "keywords": [
+    "react-native",
+    "react-native-component",
+    "scanner",
+    "ios",
+    "android",
+    "camera"
+  ],
+  "license": "MIT",
   "lint-staged": {
     "*.{js,ts,tsx}": [
       "yarn eslint --fix",
@@ -100,22 +121,31 @@
       "git add"
     ]
   },
-  "jest": {
-    "preset": "react-native",
-    "modulePathIgnorePatterns": [
-      "<rootDir>/example/node_modules",
-      "<rootDir>/lib/"
-    ]
+  "main": "index.js",
+  "name": "@woonivers/react-native-document-scanner",
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
   },
-  "@react-native-community/bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      "module",
-      "typescript"
-    ],
-    "files": [
-      "src/"
-    ]
-  }
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Woonivers/react-native-document-scanner.git"
+  },
+  "scripts": {
+    "bootstrap": "yarn example && yarn",
+    "ci:publish": "semantic-release",
+    "ci:test": "jest --passWithNoTests",
+    "example": "yarn --cwd example",
+    "lint": "eslint --ext .js,.ts,.tsx .",
+    "prepare": "bob build",
+    "release": "release-it",
+    "semantic-release": "semantic-release",
+    "test": "jest",
+    "typescript": "tsc --noEmit"
+  },
+  "types": "lib/typescript/index.d.ts",
+  "version": "2.1.1"
 }

@@ -33,6 +33,10 @@ import com.documentscanner.helpers.PreviewFrame;
 import com.documentscanner.helpers.ScannedDocument;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.bridge.ReactContextBaseJavaModule;
+import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.JavaCameraView;
@@ -597,37 +601,46 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
         return fileName;
     }
 
-    public void saveDocument(ScannedDocument scannedDocument) {
+    public void saveDocument(ScannedDocument scannedDocument, Mat originalMat) {
 
         Mat doc = (scannedDocument.processed != null) ? scannedDocument.processed : scannedDocument.original;
 
-        String fileName = this.saveToDirectory(doc);
+        //String fileName = this.saveToDirectory(doc);
         String initialFileName = this.saveToDirectory(scannedDocument.original);
+        String originalFilePath = this.saveToDirectory(originalMat);
 
         WritableMap data = new WritableNativeMap();
 
         if (this.listener != null) {
             data.putInt("height", scannedDocument.heightWithRatio);
             data.putInt("width", scannedDocument.widthWithRatio);
-            data.putString("croppedImage", "file://" + fileName);
             data.putString("initialImage", "file://" + initialFileName);
-            // data.putMap("rectangleCoordinates", scannedDocument.previewPointsAsHash());
+            data.putMap("rectangleCoordinates", scannedDocument.previewPointsAsHash());
 
+            if(scannedDocument.isNetworkRequestNecessary()){
+                data.putString("apiCallRequired", "y");
+                data.putString("unchangedFile", originalFilePath);
+            }
             this.listener.onPictureTaken(data);
+
         }
 
 
-        Log.d(TAG, "wrote: " + fileName);
+        //Log.d(TAG, "wrote: " + fileName);
 
 
-        if (this.saveOnDevice) {
+        /* if (this.saveOnDevice) {
             // TODO: Change name addImageToGallery to saveOnDevice
-            addImageToGallery(fileName, mContext);
-        }
+            //addImageToGallery(fileName, mContext);
+        } */
 
         refreshCamera();
 
     }
+
+   /*  private void sendEvent(Context context, String eventName, WritableMap params) {
+        context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName, params);
+    } */
 
     private List<Size> getResolutionList() {
         return mCamera.getParameters().getSupportedPreviewSizes();
