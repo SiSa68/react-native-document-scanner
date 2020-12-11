@@ -12,25 +12,13 @@ import com.documentscanner.R;
  */
 
 public class MainView extends FrameLayout {
-    private OpenNoteCameraView view = null;
-    private FrameLayout frameLayout = null;
+    private OpenNoteCameraView view;
 
-    public static MainView instance = null;
-
-    public static MainView getInstance() {
-        return instance;
-    }
-
-    public static void createInstance(Context context, Activity activity) {
-        instance = new MainView(context, activity);
-    }
-
-    private MainView(Context context, Activity activity) {
+    public MainView(Context context, Activity activity) {
         super(context);
 
         LayoutInflater lf = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        this.frameLayout = (FrameLayout) lf.inflate(R.layout.activity_open_note_scanner, null);
-        // OpenNoteCameraView.createInstance(context, -1, activity, frameLayout);
+        FrameLayout frameLayout = (FrameLayout) lf.inflate(R.layout.activity_open_note_scanner, null);
 
         view = new OpenNoteCameraView(context, -1, activity, frameLayout);
         addViewInLayout(view, 0, new FrameLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
@@ -44,12 +32,12 @@ public class MainView extends FrameLayout {
         }
     }
 
-    public void setDocumentAnimation(boolean animate) {
-        view.setDocumentAnimation(animate);
-    }
-
     public void setDetectionCountBeforeCapture(int numberOfRectangles) {
         view.setDetectionCountBeforeCapture(numberOfRectangles);
+    }
+
+    public void setDurationBetweenCaptures(double durationBetweenCaptures) {
+        view.setDurationBetweenCaptures(durationBetweenCaptures);
     }
 
     public void setEnableTorch(boolean enable) {
@@ -60,20 +48,16 @@ public class MainView extends FrameLayout {
         view.setOnScannerListener(listener);
     }
 
-    public void removeOnScannerListener() {
-        view.removeOnScannerListener();
-    }
-
     public void setOnProcessingListener(OpenNoteCameraView.OnProcessingListener listener) {
         view.setOnProcessingListener(listener);
     }
 
-    public void removeOnProcessingListener() {
-        view.removeOnProcessingListener();
-    }
-
     public void setOverlayColor(String rgbaColor) {
         view.setOverlayColor(rgbaColor);
+    }
+
+    public void setSaveOnDevice(Boolean saveOnDevice) {
+        view.setSaveOnDevice(saveOnDevice);
     }
 
     public void setBrightness(double brightness) {
@@ -86,10 +70,6 @@ public class MainView extends FrameLayout {
 
     public void setManualOnly(boolean manualOnly) {
         view.setManualOnly(manualOnly);
-    }
-
-    public void setRemoveGrayScale(boolean grayscale) {
-        view.setRemoveGrayScale(grayscale);
     }
 
     public void capture() {

@@ -27,7 +27,10 @@
         self.onRectangleDetect(@{@"stableCounter": @(self.stableCounter), @"lastDetectionType": @(type)});
     }
 
-    if (self.stableCounter > self.detectionCountBeforeCapture){
+    if (self.stableCounter > self.detectionCountBeforeCapture &&
+        [NSDate timeIntervalSinceReferenceDate] > self.lastCaptureTime + self.durationBetweenCaptures) {
+        self.lastCaptureTime = [NSDate timeIntervalSinceReferenceDate];
+        self.stableCounter = 0;
         [self capture];
     }
 }
@@ -51,7 +54,7 @@
              while rectangleFeature returns a rectangle viewed from landscape, which explains the nonsense of the mapping below.
              Sorry about that.
              */
-            NSDictionary *rectangleCoordinates = rectangleFeature ? @{
+            id rectangleCoordinates = rectangleFeature ? @{
                                      @"topLeft": @{ @"y": @(rectangleFeature.bottomLeft.x + 30), @"x": @(rectangleFeature.bottomLeft.y)},
                                      @"topRight": @{ @"y": @(rectangleFeature.topLeft.x + 30), @"x": @(rectangleFeature.topLeft.y)},
                                      @"bottomLeft": @{ @"y": @(rectangleFeature.bottomRight.x), @"x": @(rectangleFeature.bottomRight.y)},

@@ -1,15 +1,11 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-def safeExtGet(prop, fallback) {
-    rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
-}
 
 buildscript {
     repositories {
-        google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.0.1'
+        classpath 'com.android.tools.build:gradle:2.2.3'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -19,20 +15,20 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion safeExtGet('compileSdkVersion', 29)
-    buildToolsVersion safeExtGet('buildToolsVersion', '29.0.2')
+    compileSdkVersion 28
+
     defaultConfig {
-        minSdkVersion safeExtGet('minSdkVersion', 16)
-        targetSdkVersion safeExtGet('targetSdkVersion', 29)
+        minSdkVersion 16
+        targetSdkVersion 22
+        versionCode 1
+        versionName "1.0"
+        ndk {
+            abiFilters "armeabi-v7a", "x86"
+        }
     }
 }
 
 dependencies {
     implementation project(':openCVLibrary310')
-    implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.facebook.react:react-native:+'
-    implementation 'com.google.zxing:core:3.0.1'
-    implementation 'org.piwik.sdk:piwik-sdk:0.0.4'
-    implementation 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
-    implementation 'us.feras.mdv:markdownview:1.1.0'
 }

@@ -1,10 +1,8 @@
 package com.documentscanner;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.shapes.PathShape;
@@ -14,20 +12,7 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.bridge.WritableNativeMap;
-
 import com.documentscanner.views.OpenNoteCameraView;
-import com.google.zxing.BinaryBitmap;
-import com.google.zxing.ChecksumException;
-import com.google.zxing.FormatException;
-import com.google.zxing.LuminanceSource;
-import com.google.zxing.NotFoundException;
-import com.google.zxing.RGBLuminanceSource;
-import com.google.zxing.Result;
-import com.google.zxing.ResultPoint;
-import com.google.zxing.common.HybridBinarizer;
-import com.google.zxing.multi.qrcode.QRCodeMultiReader;
 import com.documentscanner.helpers.OpenNoteMessage;
 import com.documentscanner.helpers.PreviewFrame;
 import com.documentscanner.helpers.Quadrilateral;
@@ -38,49 +23,36 @@ import com.documentscanner.views.HUDCanvasView;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import org.opencv.calib3d.Calib3d;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
-/**
- * Created by allgood on 05/03/16.
- */
 public class ImageProcessor extends Handler {
 
     private static final String TAG = "ImageProcessor";
-    private final Handler mUiHandler;
     private final OpenNoteCameraView mMainActivity;
     private boolean mBugRotate;
-    private boolean colorMode = false;
-    private boolean filterMode = true;
     private double colorGain = 1; // contrast
     private double colorBias = 10; // bright
-    private int colorThresh = 115; // threshold
     private Size mPreviewSize;
     private Point[] mPreviewPoints;
-    private ResultPoint[] qrResultPoints;
     private int numOfSquares = 0;
     private int numOfRectangles = 10;
-    private boolean noGrayscale = false;
+    private double lastCaptureTime = 0;
+    private double durationBetweenCaptures = 0;
 
-    public ImageProcessor(Looper looper, Handler uiHandler, OpenNoteCameraView mainActivity, Context context) {
+    public ImageProcessor(Looper looper, OpenNoteCameraView mainActivity, Context context) {
         super(looper);
-        mUiHandler = uiHandler;
         this.mMainActivity = mainActivity;
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
         mBugRotate = sharedPref.getBoolean("bug_rotate", false);
@@ -90,16 +62,16 @@ public class ImageProcessor extends Handler {
         this.numOfRectangles = numOfRectangles;
     }
 
+    public void setDurationBetweenCaptures(double durationBetweenCaptures) {
+        this.durationBetweenCaptures = durationBetweenCaptures;
+    }
+
     public void setBrightness(double brightness) {
         this.colorBias = brightness;
     }
 
     public void setContrast(double contrast) {
         this.colorGain = contrast;
-    }
-
-    public void setRemoveGrayScale(boolean grayscale) {
-        this.noGrayscale = grayscale;
     }
 
     public void handleMessage(Message msg) {
@@ -111,58 +83,30 @@ public class ImageProcessor extends Handler {
             String command = obj.getCommand();
 
             Log.d(TAG, "Message Received: " + command + " - " + obj.getObj().toString());
+            // TODO: Manage command.equals("colorMode" || "filterMode"), return boolean
 
             if (command.equals("previewFrame")) {
                 processPreviewFrame((PreviewFrame) obj.getObj());
             } else if (command.equals("pictureTaken")) {
                 processPicture((Mat) obj.getObj());
-            } else if (command.equals("colorMode")) {
-                colorMode = (Boolean) obj.getObj();
-            } else if (command.equals("filterMode")) {
-                filterMode = (Boolean) obj.getObj();
             }
         }
     }
 
     private void processPreviewFrame(PreviewFrame previewFrame) {
 
-        Result[] results = {};
-
         Mat frame = previewFrame.getFrame();
 
-        try {
-            results = zxing(frame);
-        } catch (ChecksumException | FormatException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        boolean qrOk = false;
-        String currentQR = null;
-
-        for (Result result : results) {
-            String qrText = result.getText();
-            if (Utils.isMatch(qrText, "^P.. V.. S[0-9]+") && checkQR(qrText)) {
-                Log.d(TAG, "QR Code valid: " + result.getText());
-                qrOk = true;
-                currentQR = qrText;
-                qrResultPoints = result.getResultPoints();
-                break;
-            } else {
-                Log.d(TAG, "QR Code ignored: " + result.getText());
-            }
-        }
-
-        boolean autoMode = previewFrame.isAutoMode();
-        boolean previewOnly = previewFrame.isPreviewOnly();
         boolean focused = mMainActivity.isFocused();
 
         if (detectPreviewDocument(frame) && focused) {
             numOfSquares++;
-            if (numOfSquares == numOfRectangles) {
+            double now = (double)(new Date()).getTime() / 1000.0;
+            if (numOfSquares == numOfRectangles && now > lastCaptureTime + durationBetweenCaptures) {
+                lastCaptureTime = now;
+                numOfSquares = 0;
                 mMainActivity.requestPicture();
                 mMainActivity.waitSpinnerVisible();
-                numOfSquares = 0;
             }
         } else {
             numOfSquares = 0;
@@ -173,7 +117,7 @@ public class ImageProcessor extends Handler {
 
     }
 
-    public void processPicture(Mat picture) {
+    private void processPicture(Mat picture) {
 
         Mat img = Imgcodecs.imdecode(picture, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);
         picture.release();
@@ -194,7 +138,6 @@ public class ImageProcessor extends Handler {
         picture.release();
 
         mMainActivity.setImageProcessorBusy(false);
-        mMainActivity.setAttemptToFocus(false);
         mMainActivity.waitSpinnerInvisible();
 
     }
@@ -216,14 +159,10 @@ public class ImageProcessor extends Handler {
 
             sd.originalPoints = new Point[4];
 
-            sd.originalPoints[0] = new Point(sd.widthWithRatio - quad.points[3].y, quad.points[3].x); // Topleft
+            sd.originalPoints[0] = new Point(sd.widthWithRatio - quad.points[3].y, quad.points[3].x); // TopLeft
             sd.originalPoints[1] = new Point(sd.widthWithRatio - quad.points[0].y, quad.points[0].x); // TopRight
             sd.originalPoints[2] = new Point(sd.widthWithRatio - quad.points[1].y, quad.points[1].x); // BottomRight
             sd.originalPoints[3] = new Point(sd.widthWithRatio - quad.points[2].y, quad.points[2].x); // BottomLeft
-
-            sd.previewPoints = mPreviewPoints;
-
-            MatOfPoint c = quad.contour;
 
             sd.quadrilateral = quad;
             sd.previewPoints = mPreviewPoints;
@@ -238,7 +177,7 @@ public class ImageProcessor extends Handler {
         return sd.setProcessed(doc);
     }
 
-    private HashMap<String, Long> pageHistory = new HashMap<>();
+    private final HashMap<String, Long> pageHistory = new HashMap<>();
 
     private boolean checkQR(String qrCode) {
 
@@ -278,13 +217,6 @@ public class ImageProcessor extends Handler {
 
             drawDocumentBox(mPreviewPoints, mPreviewSize);
 
-            
-            // WritableMap data = new WritableNativeMap();
-            // for(int i=0; i<mPreviewPoints.length; i++)
-            //     data.putString("Point", "x: " + mPreviewPoints[i].x + ", y: " + mPreviewPoints[i].y);
-            // data.putString("Size", "width: " + mPreviewSize.width + ", height: " + mPreviewSize.height);
-            // mMainActivity.RNLog(data);
-
             return true;
 
         }
@@ -306,14 +238,6 @@ public class ImageProcessor extends Handler {
 
         float previewWidth = (float) stdSize.height;
         float previewHeight = (float) stdSize.width;
-
-        // WritableMap data = new WritableNativeMap();
-        // data.putString("Point #1", "x: " + (previewWidth - (float) points[0].y) + ", y: " + ((float) points[0].x));
-        // data.putString("Point #2", "x: " + (previewWidth - (float) points[1].y) + ", y: " + ((float) points[1].x));
-        // data.putString("Point #3", "x: " + (previewWidth - (float) points[2].y) + ", y: " + ((float) points[2].x));
-        // data.putString("Point #4", "x: " + (previewWidth - (float) points[3].y) + ", y: " + ((float) points[3].x));
-        // data.putString("Size", "width: " + previewWidth + ", height: " + previewHeight);
-        // mMainActivity.RNLog(data);
 
         path.moveTo(previewWidth - (float) points[0].y, (float) points[0].x);
         path.lineTo(previewWidth - (float) points[1].y, (float) points[1].x);
@@ -375,7 +299,7 @@ public class ImageProcessor extends Handler {
         Comparator<Point> sumComparator = new Comparator<Point>() {
             @Override
             public int compare(Point lhs, Point rhs) {
-                return Double.valueOf(lhs.y + lhs.x).compareTo(rhs.y + rhs.x);
+                return Double.compare(lhs.y + lhs.x, rhs.y + rhs.x);
             }
         };
 
@@ -383,7 +307,7 @@ public class ImageProcessor extends Handler {
 
             @Override
             public int compare(Point lhs, Point rhs) {
-                return Double.valueOf(lhs.y - lhs.x).compareTo(rhs.y - rhs.x);
+                return Double.compare(lhs.y - lhs.x, rhs.y - rhs.x);
             }
         };
 
@@ -393,10 +317,10 @@ public class ImageProcessor extends Handler {
         // bottom-right corner = maximal sum
         result[2] = Collections.max(srcPoints, sumComparator);
 
-        // top-right corner = minimal diference
+        // top-right corner = minimal difference
         result[1] = Collections.min(srcPoints, diffComparator);
 
-        // bottom-left corner = maximal diference
+        // bottom-left corner = maximal difference
         result[3] = Collections.max(srcPoints, diffComparator);
 
         return result;
@@ -431,52 +355,9 @@ public class ImageProcessor extends Handler {
         src.convertTo(src, CvType.CV_8UC1, colorGain, colorBias);
     }
 
-    /**
-     * When a pixel have any of its three elements above the threshold value and the
-     * average of the three values are less than 80% of the higher one, brings all
-     * three values to the max possible keeping the relation between them, any
-     * absolute white keeps the value, all others go to absolute black.
-     *
-     * src must be a 3 channel image with 8 bits per channel
-     *
-     * @param src
-     * @param threshold
-     */
-    private void colorThresh(Mat src, int threshold) {
-        Size srcSize = src.size();
-        int size = (int) (srcSize.height * srcSize.width) * 3;
-        byte[] d = new byte[size];
-        src.get(0, 0, d);
-
-        for (int i = 0; i < size; i += 3) {
-
-            // the "& 0xff" operations are needed to convert the signed byte to double
-
-            // avoid unneeded work
-            if ((double) (d[i] & 0xff) == 255) {
-                continue;
-            }
-
-            double max = Math.max(Math.max((double) (d[i] & 0xff), (double) (d[i + 1] & 0xff)),
-                    (double) (d[i + 2] & 0xff));
-            double mean = ((double) (d[i] & 0xff) + (double) (d[i + 1] & 0xff) + (double) (d[i + 2] & 0xff)) / 3;
-
-            if (max > threshold && mean < max * 0.8) {
-                d[i] = (byte) ((double) (d[i] & 0xff) * 255 / max);
-                d[i + 1] = (byte) ((double) (d[i + 1] & 0xff) * 255 / max);
-                d[i + 2] = (byte) ((double) (d[i + 2] & 0xff) * 255 / max);
-            } else {
-                d[i] = d[i + 1] = d[i + 2] = 0;
-            }
-        }
-        src.put(0, 0, d);
-    }
-
     private Mat fourPointTransform(Mat src, Point[] pts) {
 
         double ratio = src.size().height / 500;
-        int height = Double.valueOf(src.size().height / ratio).intValue();
-        int width = Double.valueOf(src.size().width / ratio).intValue();
 
         Point tl = pts[0];
         Point tr = pts[1];
@@ -513,9 +394,9 @@ public class ImageProcessor extends Handler {
 
     private ArrayList<MatOfPoint> findContours(Mat src) {
 
-        Mat grayImage = null;
-        Mat cannedImage = null;
-        Mat resizedImage = null;
+        Mat grayImage;
+        Mat cannedImage;
+        Mat resizedImage;
 
         double ratio = src.size().height / 500;
         int height = Double.valueOf(src.size().height / ratio).intValue();
@@ -531,7 +412,7 @@ public class ImageProcessor extends Handler {
         Imgproc.GaussianBlur(grayImage, grayImage, new Size(5, 5), 0);
         Imgproc.Canny(grayImage, cannedImage, 80, 100, 3, false);
 
-        ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        ArrayList<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
 
         Imgproc.findContours(cannedImage, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
@@ -542,7 +423,7 @@ public class ImageProcessor extends Handler {
 
             @Override
             public int compare(MatOfPoint lhs, MatOfPoint rhs) {
-                return Double.valueOf(Imgproc.contourArea(rhs)).compareTo(Imgproc.contourArea(lhs));
+                return Double.compare(Imgproc.contourArea(rhs), Imgproc.contourArea(lhs));
             }
         });
 
@@ -551,42 +432,6 @@ public class ImageProcessor extends Handler {
         cannedImage.release();
 
         return contours;
-    }
-
-    private QRCodeMultiReader qrCodeMultiReader = new QRCodeMultiReader();
-
-    public Result[] zxing(Mat inputImage) throws ChecksumException, FormatException {
-
-        int w = inputImage.width();
-        int h = inputImage.height();
-
-        Mat southEast;
-
-        if (mBugRotate) {
-            southEast = inputImage.submat(h - h / 4, h, 0, w / 2 - h / 4);
-        } else {
-            southEast = inputImage.submat(0, h / 4, w / 2 + h / 4, w);
-        }
-
-        Bitmap bMap = Bitmap.createBitmap(southEast.width(), southEast.height(), Bitmap.Config.ARGB_8888);
-        org.opencv.android.Utils.matToBitmap(southEast, bMap);
-        southEast.release();
-        int[] intArray = new int[bMap.getWidth() * bMap.getHeight()];
-        // copy pixel data from the Bitmap into the 'intArray' array
-        bMap.getPixels(intArray, 0, bMap.getWidth(), 0, 0, bMap.getWidth(), bMap.getHeight());
-
-        LuminanceSource source = new RGBLuminanceSource(bMap.getWidth(), bMap.getHeight(), intArray);
-
-        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
-
-        Result[] results = {};
-        try {
-            results = qrCodeMultiReader.decodeMultiple(bitmap);
-        } catch (NotFoundException e) {
-        }
-
-        return results;
-
     }
 
     public void setBugRotate(boolean bugRotate) {

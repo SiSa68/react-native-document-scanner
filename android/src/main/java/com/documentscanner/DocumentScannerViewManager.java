@@ -13,13 +13,9 @@ import com.facebook.react.uimanager.annotations.ReactProp;
 
 import javax.annotation.Nullable;
 
-/**
- * Created by Andre on 29/11/2017.
- */
-
 public class DocumentScannerViewManager extends ViewGroupManager<MainView> {
 
-    public static final String REACT_CLASS = "RNPdfScanner";
+    private static final String REACT_CLASS = "RNPdfScanner";
     private MainView view = null;
 
     @Override
@@ -29,11 +25,7 @@ public class DocumentScannerViewManager extends ViewGroupManager<MainView> {
 
     @Override
     protected MainView createViewInstance(final ThemedReactContext reactContext) {
-        // OpenNoteCameraView view = new OpenNoteCameraView(reactContext, -1,
-        // reactContext.getCurrentActivity());
-        MainView.createInstance(reactContext, (Activity) reactContext.getBaseContext());
-
-        view = MainView.getInstance();
+        view = new MainView(reactContext, (Activity) reactContext.getBaseContext());
         view.setOnProcessingListener(new OpenNoteCameraView.OnProcessingListener() {
             @Override
             public void onProcessingChange(WritableMap data) {
@@ -46,11 +38,6 @@ public class DocumentScannerViewManager extends ViewGroupManager<MainView> {
             public void onPictureTaken(WritableMap data) {
                 dispatchEvent(reactContext, "onPictureTaken", data);
             }
-            
-            @Override
-            public void onLog(WritableMap data) {
-                dispatchEvent(reactContext, "doRNLog", data);
-            }
         });
 
         return view;
@@ -62,7 +49,7 @@ public class DocumentScannerViewManager extends ViewGroupManager<MainView> {
 
     @ReactProp(name = "documentAnimation", defaultBoolean = false)
     public void setDocumentAnimation(MainView view, boolean animate) {
-        view.setDocumentAnimation(animate);
+        // TODO: What is documentAnimation?
     }
 
     @ReactProp(name = "overlayColor")
@@ -70,9 +57,19 @@ public class DocumentScannerViewManager extends ViewGroupManager<MainView> {
         view.setOverlayColor(rgbaColor);
     }
 
+    @ReactProp(name = "saveOnDevice", defaultBoolean = false)
+    public void setSaveOnDevice(MainView view, Boolean saveOnDevice) {
+        view.setSaveOnDevice(saveOnDevice);
+    }
+
     @ReactProp(name = "detectionCountBeforeCapture", defaultInt = 15)
     public void setDetectionCountBeforeCapture(MainView view, int numberOfRectangles) {
         view.setDetectionCountBeforeCapture(numberOfRectangles);
+    }
+
+    @ReactProp(name = "durationBetweenCaptures", defaultDouble = 0)
+    public void setDurationBetweenCaptures(MainView view, double durationBetweenCaptures) {
+        view.setDurationBetweenCaptures(durationBetweenCaptures);
     }
 
     @ReactProp(name = "enableTorch", defaultBoolean = false)
@@ -93,11 +90,6 @@ public class DocumentScannerViewManager extends ViewGroupManager<MainView> {
     @ReactProp(name = "contrast", defaultDouble = 1)
     public void setContrast(MainView view, double contrast) {
         view.setContrast(contrast);
-    }
-
-    @ReactProp(name = "noGrayScale", defaultBoolean = false)
-    public void setRemoveGrayScale(MainView view, boolean bw) {
-        view.setRemoveGrayScale(bw);
     }
 
 }
