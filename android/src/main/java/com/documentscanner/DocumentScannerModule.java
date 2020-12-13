@@ -118,10 +118,17 @@ public class DocumentScannerModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void processPickedImage(String imageUri) {
         final ReactApplicationContext context = getReactApplicationContext();
-        Toast.makeText(context, imageUri.substring(0, 10), Toast.LENGTH_SHORT).show();
+        // Toast.makeText(context, imageUri.substring(0, 10), Toast.LENGTH_SHORT).show();
 
-        byte[] decodedString = Base64.decode(imageUri, Base64.DEFAULT);
-        Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+        // byte[] decodedString = Base64.decode(imageUri, Base64.DEFAULT);
+        // Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+        File image = new File(imageUri);
+        if(!image.exists()) {
+            Toast.makeText(context, "File not found!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        Bitmap bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(), bmOptions);
 
         Mat tmp = new Mat();
         Mat tmp2 = new Mat();

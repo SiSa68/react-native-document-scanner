@@ -62,9 +62,9 @@ class PdfScanner extends React.Component {
   }
 
   capture () {
-    console.log("in capture")
+    // console.log("in capture")
     if (this._scannerHandle) {
-      console.log("in capture in if")
+      // console.log("in capture in if")
       ScannerManager.capture(this._scannerHandle)
     }
   }
@@ -103,7 +103,7 @@ class PdfScanner extends React.Component {
 }
 
 export const onImagePicked = (imageUri) => {
-    console.log("is this here really?");
+    // console.log("is this here really?");
     ScannerManager.processPickedImage(imageUri);
 }
 

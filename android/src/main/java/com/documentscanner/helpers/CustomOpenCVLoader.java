@@ -123,9 +123,9 @@ public class CustomOpenCVLoader extends OpenCVLoader {
                             AppContext.startActivity(intent);
                             break;
                         case DownloadManager.STATUS_FAILED:
-                            Toast.makeText(AppContext,
-                                    "FAILED: " + reason,
-                                    Toast.LENGTH_LONG).show();
+                            // Toast.makeText(AppContext,
+                            //         "FAILED: " + reason,
+                            //         Toast.LENGTH_LONG).show();
                             AppContext.unregisterReceiver(onComplete);
                             break;
                         default:

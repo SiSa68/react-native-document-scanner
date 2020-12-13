@@ -39,7 +39,7 @@ RCT_EXPORT_VIEW_PROPERTY(contrast, float)
 
 RCT_EXPORT_METHOD(processPickedImage:(NSString *)path) {
 
-    NSLog(@"image path: %@", path);
+    // NSLog(@"image path: %@", path);
 
     NSURL *localurl = [NSURL URLWithString:path];
     UIImage *img = [UIImage imageWithContentsOfFile:localurl.path];

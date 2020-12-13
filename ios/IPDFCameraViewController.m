@@ -368,22 +368,6 @@
      {
          enhancedImage = [self filteredImageUsingContrastFilterOnImage:enhancedImage];
      }
-    
-    if (weakSelf.isBorderDetectionEnabled) {
-        
-        NSLog(@"1.rect detection is available");
-    } else{
-        
-        NSLog(@"1.rect detection is NOT available");
-    }
-    
-    if (rectangleDetectionConfidenceHighEnough(weakSelf.imageDetectionConfidence)) {
-        
-        NSLog(@"2.rect detection is available");
-    } else{
-        
-        NSLog(@"2.rect detection is NOT available");
-    }
 
      if (weakSelf.isBorderDetectionEnabled && rectangleDetectionConfidenceHighEnough(weakSelf.imageDetectionConfidence))
      {
