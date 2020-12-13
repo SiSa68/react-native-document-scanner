@@ -14,7 +14,7 @@ Live document detection library. Returns either a URI of the captured image, all
 
 Version `>=2.0.0` is thinking to work with React Native >= 0.60
 
-> Use [version `1.6.2`](https://github.com/Woonivers/react-native-document-scanner/tree/v1.6.2) if you are using React Native 0.59
+> Use [version `1.6.2`](https://github.com/SiSa68/react-native-document-scanner/tree/v1.6.2) if you are using React Native 0.59
 
 Install the library using either yarn:
 
@@ -92,7 +92,7 @@ function YourComponent(props) {
 }
 ```
 
-Full example in [example folder](https://github.com/Woonivers/react-native-document-scanner/tree/master/example).
+Full example in [example folder](https://github.com/SiSa68/react-native-document-scanner/tree/master/example).
 
 ## Properties
 
