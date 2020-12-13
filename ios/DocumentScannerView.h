@@ -15,5 +15,6 @@
 @property (nonatomic, assign) BOOL saveInAppDocument;
 
 - (void) capture;
+- (void) detectImageRect:(UIImage*)image;
 
 @end

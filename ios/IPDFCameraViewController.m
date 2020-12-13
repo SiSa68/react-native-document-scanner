@@ -347,6 +347,74 @@
     }
 }
 
+- (void)detectImageRectWithCompletionHander:(UIImage*)image completionHandler:(void(^)(UIImage *data, UIImage *initialData, CIRectangleFeature *rectangleFeature))completionHandler;
+{
+    __weak typeof(self) weakSelf = self;
+
+    [weakSelf hideGLKView:YES completion:^
+    {
+        [weakSelf hideGLKView:NO completion:^
+        {
+            [weakSelf hideGLKView:YES completion:nil];
+        }];
+    }];
+    
+    CIImage* enhancedImage = [CIImage imageWithCGImage:image.CGImage];
+     if (weakSelf.cameraViewType == IPDFCameraViewTypeBlackAndWhite)
+     {
+         enhancedImage = [self filteredImageUsingEnhanceFilterOnImage:enhancedImage];
+     }
+     else
+     {
+         enhancedImage = [self filteredImageUsingContrastFilterOnImage:enhancedImage];
+     }
+    
+    if (weakSelf.isBorderDetectionEnabled) {
+        
+        NSLog(@"1.rect detection is available");
+    } else{
+        
+        NSLog(@"1.rect detection is NOT available");
+    }
+    
+    if (rectangleDetectionConfidenceHighEnough(weakSelf.imageDetectionConfidence)) {
+        
+        NSLog(@"2.rect detection is available");
+    } else{
+        
+        NSLog(@"2.rect detection is NOT available");
+    }
+
+     if (weakSelf.isBorderDetectionEnabled && rectangleDetectionConfidenceHighEnough(weakSelf.imageDetectionConfidence))
+     {
+        CIRectangleFeature *rectangleFeature = [self biggestRectangleInRectangles:[[self highAccuracyRectangleDetector] featuresInImage:enhancedImage]];
+
+        if (rectangleFeature)
+        {
+            enhancedImage = [self correctPerspectiveForImage:enhancedImage withFeatures:rectangleFeature];
+
+            UIGraphicsBeginImageContext(CGSizeMake(enhancedImage.extent.size.height, enhancedImage.extent.size.width));
+            [[UIImage imageWithCIImage:enhancedImage scale:1.0 orientation:UIImageOrientationRight] drawInRect:CGRectMake(0,0, enhancedImage.extent.size.height, enhancedImage.extent.size.width)];
+            UIImage *img = UIGraphicsGetImageFromCurrentImageContext();
+            UIGraphicsEndImageContext();
+
+            UIImage *filteredImage = [self doBinarize:image];
+            UIImage *cropedImage = [self doBinarize:img];
+
+            [weakSelf hideGLKView:NO completion:nil];
+            completionHandler(cropedImage, filteredImage, rectangleFeature);
+        } else {
+            [weakSelf hideGLKView:NO completion:nil];
+            UIImage *filteredImage = [self doBinarize:image];
+            completionHandler(filteredImage, filteredImage, nil);
+        }
+     } else {
+         [weakSelf hideGLKView:NO completion:nil];
+         UIImage *filteredImage = [self doBinarize:image];
+         completionHandler(filteredImage, filteredImage, nil);
+     }
+}
+
 - (void)captureImageWithCompletionHander:(void(^)(UIImage *data, UIImage *initialData, CIRectangleFeature *rectangleFeature))completionHandler;
 {
     if (self.isCapturing) return;
@@ -407,13 +475,22 @@
                      UIImage *initialImage = [UIImage imageWithData:imageData];
                      UIGraphicsEndImageContext();
 
+                     UIImage *filteredImage = [self doBinarize:initialImage];
+                     UIImage *cropedImage = [self doBinarize:image];
+
                      [weakSelf hideGLKView:NO completion:nil];
-                     completionHandler(image, initialImage, rectangleFeature);
+                     completionHandler(cropedImage, filteredImage, rectangleFeature);
+                 } else {
+                     [weakSelf hideGLKView:NO completion:nil];
+                     UIImage *initialImage = [UIImage imageWithData:imageData];
+                     UIImage *filteredImage = [self doBinarize:initialImage];
+                     completionHandler(filteredImage, filteredImage, nil);
                  }
              } else {
                  [weakSelf hideGLKView:NO completion:nil];
                  UIImage *initialImage = [UIImage imageWithData:imageData];
-                 completionHandler(initialImage, initialImage, nil);
+                 UIImage *filteredImage = [self doBinarize:initialImage];
+                 completionHandler(filteredImage, filteredImage, nil);
              }
 
          }
@@ -421,7 +498,8 @@
          {
              [weakSelf hideGLKView:NO completion:nil];
              UIImage *initialImage = [UIImage imageWithData:imageData];
-             completionHandler(initialImage, initialImage, nil);
+             UIImage *filteredImage = [self doBinarize:initialImage];
+             completionHandler(filteredImage, filteredImage, nil);
          }
 
          weakSelf.isCapturing = NO;
@@ -439,6 +517,88 @@
         if (!completion) return;
         completion();
     }];
+}
+
+- (UIImage *)doBinarize:(UIImage *)sourceImage
+{
+    UIImageOrientation orientation = sourceImage.imageOrientation;
+    CIImage* image = [CIImage imageWithCGImage:sourceImage.CGImage];
+    CIContext *context = [CIContext contextWithOptions:nil];
+    
+//    CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectTransfer"];
+//    [filter setValue:image forKey:kCIInputImageKey];
+    
+    CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues: kCIInputImageKey,image, nil];
+    
+//    CIFilter *filter= [CIFilter filterWithName:@"CIColorControls"];
+//    [filter setValue:image forKey:@"inputImage"];
+//    [filter setValue:[NSNumber numberWithFloat:0.6] forKey:@"inputSaturation"];
+////    [filter setValue:[NSNumber numberWithFloat:0.2] forKey:@"inputBrightness"];
+//    [filter setValue:[NSNumber numberWithFloat:1.5] forKey:@"inputContrast"];//1.05
+    
+    CIImage *outputImage = [filter outputImage];
+    CGImageRef cgimg = [context createCGImage:outputImage fromRect:[outputImage extent]];
+    UIImage *newPhoto = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
+    CGImageRelease(cgimg);
+    context = nil;
+//    return newPhoto;
+    return [self grayImage:newPhoto];
+    
+    /*
+    CIContext *imageContext = [CIContext contextWithOptions:nil];
+    CIImage *image = [[CIImage alloc] initWithImage:sourceImage];
+    
+    CIFilter *filter= [CIFilter filterWithName:@"CIColorControls"];
+    [filter setValue:image forKey:@"inputImage"];
+    [filter setValue:[NSNumber numberWithFloat:0] forKey:@"inputSaturation"];
+    [filter setValue:[NSNumber numberWithFloat:1.05] forKey:@"inputContrast"];//1.05
+    
+    CIImage *result = [filter valueForKey: @"outputImage"];
+    CGImageRef cgImageRef = [imageContext createCGImage:result fromRect:[result extent]];
+    
+    UIImage *targetImage = [UIImage imageWithCGImage:cgImageRef];
+    return targetImage;
+     */
+    
+    /*
+//    UIImage *image = [[UIImage alloc] initWithCIImage:sourceImage];
+    UIImage *image = [self grayImage:sourceImage];
+    return image;
+    
+    // [self start];
+    CIImage * ciImage = [CIFilter filterWithName:@"CIColorControls" keysAndValues:kCIInputImageKey, image.CIImage, @"inputBrightness", @(self.brightness), @"inputContrast", @(self.contrast), @"inputSaturation", @(self.saturation), nil].outputImage;
+//    CIImage * ciImage = [CIFilter filterWithName:@"CIColorControls" keysAndValues:kCIInputImageKey, image.CIImage, @"inputBrightness", 0.6, @"inputContrast", 1.5, @"inputSaturation", 0.8, nil].outputImage;
+
+    return [[UIImage alloc] initWithCIImage:ciImage];
+*/
+//     //first off, try to grayscale the image using iOS core Image routine
+//     UIImage * grayScaledImg = [self grayImage:sourceImage];
+//     GPUImagePicture *imageSource = [[GPUImagePicture alloc] initWithImage:grayScaledImg];
+//     GPUImageAdaptiveThresholdFilter *stillImageFilter = [[GPUImageAdaptiveThresholdFilter alloc] init];
+//     stillImageFilter.blurSize = 8.0;
+
+//     [imageSource addTarget:stillImageFilter];
+//     [imageSource processImage];
+
+//     UIImage *retImage = [stillImageFilter imageFromCurrentlyProcessedOutput];
+//     return retImage;
+}
+
+- (UIImage *) grayImage :(UIImage *)inputImage
+{    
+    // Create a graphic context.
+    UIGraphicsBeginImageContextWithOptions(inputImage.size, YES, 1.0);
+    CGRect imageRect = CGRectMake(0, 0, inputImage.size.width, inputImage.size.height);
+
+    // Draw the image with the luminosity blend mode.
+    // On top of a white background, this will give a black and white image.
+    [inputImage drawInRect:imageRect blendMode:kCGBlendModeLuminosity alpha:1.0];
+
+    // Get the resulting image.
+    UIImage *outputImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+
+    return outputImage;
 }
 
 - (CIImage *)filteredImageUsingEnhanceFilterOnImage:(CIImage *)image

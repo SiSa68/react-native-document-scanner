@@ -44,6 +44,8 @@ typedef NS_ENUM(NSInteger, IPDFRectangeType)
 
 - (void)focusAtPoint:(CGPoint)point completionHandler:(void(^)(void))completionHandler;
 
+- (void)detectImageRectWithCompletionHander:(UIImage*)image completionHandler:(void(^)(UIImage *data, UIImage *initialData, CIRectangleFeature *rectangleFeature))completionHandler;
+
 - (void)captureImageWithCompletionHander:(void(^)(UIImage *data, UIImage *initialData, CIRectangleFeature *rectangleFeature))completionHandler;
 
 @property (nonatomic, strong) UIColor* overlayColor;
