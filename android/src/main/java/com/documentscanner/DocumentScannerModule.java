@@ -168,9 +168,9 @@ public class DocumentScannerModule extends ReactContextBaseJavaModule {
         if(scannedDocument.isNetworkRequestNecessary()){
             data.putString("apiCallRequired", "y");
             data.putString("unchangedFile", unchangedMat);
-            sendEvent(this.mReactContext, "ImagePickedEvent", data);
+            sendEvent(this.mReactContext, "onPictureTaken", data);
         }else {
-            sendEvent(this.mReactContext, "ImagePickedEvent", data);
+            sendEvent(this.mReactContext, "onPictureTaken", data);
         }
     }
 
