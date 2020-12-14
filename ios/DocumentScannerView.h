@@ -15,6 +15,6 @@
 @property (nonatomic, assign) BOOL saveInAppDocument;
 
 - (void) capture;
-- (void) detectImageRect:(UIImage*)image;
+- (void) detectImageRect:(UIImage*)image callback:(RCTResponseSenderBlock)callback;
 
 @end

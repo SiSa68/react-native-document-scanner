@@ -91,7 +91,7 @@
 
 }
 
-- (void) detectImageRect:(UIImage*)image {
+- (void) detectImageRect:(UIImage*)image callback:(RCTResponseSenderBlock)callback {
     [self detectImageRectWithCompletionHander:image completionHandler:^(UIImage *croppedImage, UIImage *initialImage, CIRectangleFeature *rectangleFeature) {
       if (self.onPictureTaken) {
             NSData *croppedImageData = UIImageJPEGRepresentation(croppedImage, self.quality);
@@ -117,10 +117,14 @@
                                      @"bottomRight": @{ @"y": @(rectangleFeature.topRight.x), @"x": @(rectangleFeature.topRight.y)},
                                      } : [NSNull null];
             if (self.useBase64) {
-              self.onPictureTaken(@{
+              callback(@[[NSNull null], @{
                                     @"croppedImage": [croppedImageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength],
                                     @"initialImage": [initialImageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength],
-                                    @"rectangleCoordinates": rectangleCoordinates });
+                                    @"rectangleCoordinates": rectangleCoordinates }]);
+            //   self.onPictureTaken(@{
+            //                         @"croppedImage": [croppedImageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength],
+            //                         @"initialImage": [initialImageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength],
+            //                         @"rectangleCoordinates": rectangleCoordinates });
             }
             else {
                 NSString *dir = NSTemporaryDirectory();
@@ -133,10 +137,14 @@
               [croppedImageData writeToFile:croppedFilePath atomically:YES];
               [initialImageData writeToFile:initialFilePath atomically:YES];
 
-               self.onPictureTaken(@{
+               callback(@[[NSNull null], @{
                                      @"croppedImage": croppedFilePath,
                                      @"initialImage": initialFilePath,
-                                     @"rectangleCoordinates": rectangleCoordinates });
+                                     @"rectangleCoordinates": rectangleCoordinates }]);
+            //    self.onPictureTaken(@{
+            //                          @"croppedImage": croppedFilePath,
+            //                          @"initialImage": initialFilePath,
+            //                          @"rectangleCoordinates": rectangleCoordinates });
             }
         }
 

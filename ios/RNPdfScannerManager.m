@@ -37,7 +37,7 @@ RCT_EXPORT_VIEW_PROPERTY(brightness, float)
 RCT_EXPORT_VIEW_PROPERTY(contrast, float)
 
 
-RCT_EXPORT_METHOD(processPickedImage:(NSString *)path) {
+RCT_EXPORT_METHOD(processPickedImage:(NSString *)path callback:(RCTResponseSenderBlock)callback) {
 
     // NSLog(@"image path: %@", path);
 
@@ -45,7 +45,7 @@ RCT_EXPORT_METHOD(processPickedImage:(NSString *)path) {
     UIImage *img = [UIImage imageWithContentsOfFile:localurl.path];
     // NSData *data = [NSData dataWithContentsOfURL:localurl];
     // UIImage *img = [[UIImage alloc] initWithData:data];
-    [_scannerView detectImageRect:img];
+    [_scannerView detectImageRect:img callback:callback];
 }
 
 RCT_EXPORT_METHOD(capture:(nonnull NSNumber *)reactTag) {
