@@ -20,6 +20,7 @@ import com.facebook.react.uimanager.UIBlock;
 import com.facebook.react.uimanager.UIManagerModule;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableNativeMap;
 
@@ -67,11 +68,11 @@ import java.util.regex.Pattern;
 import java.io.File;
 import java.lang.Math;
 
+
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -116,7 +117,7 @@ public class DocumentScannerModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void processPickedImage(String imageUri) {
+    public void processPickedImage(String imageUri, Callback callback) {
         final ReactApplicationContext context = getReactApplicationContext();
         // Toast.makeText(context, imageUri.substring(0, 10), Toast.LENGTH_SHORT).show();
 
@@ -124,7 +125,10 @@ public class DocumentScannerModule extends ReactContextBaseJavaModule {
         // Bitmap bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
         File image = new File(imageUri);
         if(!image.exists()) {
-            Toast.makeText(context, "File not found!", Toast.LENGTH_SHORT).show();
+            // Toast.makeText(context, "File not found!", Toast.LENGTH_SHORT).show();
+            WritableMap data = new WritableNativeMap();
+            data.putString("message", "File not exist!");
+            callback.invoke(data, null);
             return;
         }
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
@@ -148,10 +152,10 @@ public class DocumentScannerModule extends ReactContextBaseJavaModule {
 
         ScannedDocument doc = detectDocument(tmp);
 
-        saveDocument(doc, tmp2);
+        saveDocument(doc, tmp2, callback);
     }
 
-    public void saveDocument(ScannedDocument scannedDocument, Mat tmp2) {
+    public void saveDocument(ScannedDocument scannedDocument, Mat tmp2, Callback callback) {
 
         Mat doc = (scannedDocument.processed != null) ? scannedDocument.processed : scannedDocument.original;
 
@@ -168,9 +172,12 @@ public class DocumentScannerModule extends ReactContextBaseJavaModule {
         if(scannedDocument.isNetworkRequestNecessary()){
             data.putString("apiCallRequired", "y");
             data.putString("unchangedFile", unchangedMat);
-            sendEvent(this.mReactContext, "onPictureTaken", data);
+            
+//            sendEvent(this.mReactContext, "onPictureTaken", data);
+            callback.invoke(null, data);
         }else {
-            sendEvent(this.mReactContext, "onPictureTaken", data);
+//            sendEvent(this.mReactContext, "onPictureTaken", data);
+            callback.invoke(null, data);
         }
     }
 

@@ -102,9 +102,9 @@ class PdfScanner extends React.Component {
   }
 }
 
-export const onImagePicked = (imageUri) => {
+export const onImagePicked = (imageUri, callback) => {
     // console.log("is this here really?");
-    ScannerManager.processPickedImage(imageUri);
+    ScannerManager.processPickedImage(imageUri, callback);
 }
 
 export default PdfScanner
