@@ -31,7 +31,7 @@ class PdfScanner extends React.Component {
   componentDidMount () {
     if (Platform.OS === 'android') {
       const { onPictureTaken, onProcessing } = this.props
-      if (onPictureTaken) DeviceEventEmitter.addListener('onPictureTaken', onPictureTaken)
+      if (onPictureTaken) DeviceEventEmitter.addListener('onScanTaken', onPictureTaken)
       if (onProcessing) DeviceEventEmitter.addListener('onProcessingChange', onProcessing)
     }
   }
@@ -40,9 +40,9 @@ class PdfScanner extends React.Component {
     if (Platform.OS === 'android') {
       if (this.props.onPictureTaken !== prevProps.onPictureTaken) {
         if (prevProps.onPictureTaken)
-          DeviceEventEmitter.removeListener('onPictureTaken', prevProps.onPictureTaken)
+          DeviceEventEmitter.removeListener('onScanTaken', prevProps.onPictureTaken)
         if (this.props.onPictureTaken)
-          DeviceEventEmitter.addListener('onPictureTaken', this.props.onPictureTaken)
+          DeviceEventEmitter.addListener('onScanTaken', this.props.onPictureTaken)
       }
       if (this.props.onProcessing !== prevProps.onProcessing) {
         if (prevProps.onProcessing)
@@ -56,7 +56,7 @@ class PdfScanner extends React.Component {
   componentWillUnmount () {
     if (Platform.OS === 'android') {
       const { onPictureTaken, onProcessing } = this.props
-      if (onPictureTaken) DeviceEventEmitter.removeListener('onPictureTaken', onPictureTaken)
+      if (onPictureTaken) DeviceEventEmitter.removeListener('onScanTaken', onPictureTaken)
       if (onProcessing) DeviceEventEmitter.removeListener('onProcessingChange', onProcessing)
     }
   }

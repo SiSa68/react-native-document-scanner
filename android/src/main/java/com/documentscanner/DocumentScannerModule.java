@@ -173,10 +173,10 @@ public class DocumentScannerModule extends ReactContextBaseJavaModule {
             data.putString("apiCallRequired", "y");
             data.putString("unchangedFile", unchangedMat);
             
-//            sendEvent(this.mReactContext, "onPictureTaken", data);
+//            sendEvent(this.mReactContext, "onScanTaken", data);
             callback.invoke(null, data);
         }else {
-//            sendEvent(this.mReactContext, "onPictureTaken", data);
+//            sendEvent(this.mReactContext, "onScanTaken", data);
             callback.invoke(null, data);
         }
     }

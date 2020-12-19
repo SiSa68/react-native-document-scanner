@@ -90,7 +90,7 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
     private OnProcessingListener processingListener = null;
 
     public interface OnScannerListener {
-        void onPictureTaken(WritableMap path);
+        void onScanTaken(WritableMap path);
     }
 
     public interface OnProcessingListener {
@@ -621,7 +621,7 @@ public class OpenNoteCameraView extends JavaCameraView implements PictureCallbac
                 data.putString("apiCallRequired", "y");
                 data.putString("unchangedFile", originalFilePath);
             }
-            this.listener.onPictureTaken(data);
+            this.listener.onScanTaken(data);
 
         }
 
