@@ -86,7 +86,7 @@ class PdfScanner extends React.Component {
       <RNPdfScanner
         ref={this._setReference}
         {...this.props}
-        onPictureTaken={this.sendOnPictureTakenEvent.bind(this)}
+        onScanTaken={this.sendOnPictureTakenEvent.bind(this)}
         onRectangleDetect={this.sendOnRectangleDetectEvent.bind(this)}
         useFrontCam={this.props.useFrontCam || false}
         brightness={this.props.brightness || 0}
