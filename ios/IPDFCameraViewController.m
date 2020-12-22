@@ -505,6 +505,7 @@
 
 - (UIImage *)doBinarize:(UIImage *)sourceImage
 {
+    [self start];
     UIImageOrientation orientation = sourceImage.imageOrientation;
     CIImage* image = [CIImage imageWithCGImage:sourceImage.CGImage];
     CIContext *context = [CIContext contextWithOptions:nil];
