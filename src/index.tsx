@@ -81,7 +81,7 @@ class PdfScanner extends React.Component<PdfScannerProps> {
     ScannerManager.processPickedImage();
     if (Platform.OS === 'android') {
       const { onPictureTaken, onProcessing } = this.props
-      if (onPictureTaken) DeviceEventEmitter.addListener('onPictureTaken', onPictureTaken)
+      if (onPictureTaken) DeviceEventEmitter.addListener('onScanTaken', onPictureTaken)
       if (onProcessing) DeviceEventEmitter.addListener('onProcessingChange', onProcessing)
     }
   }
@@ -90,9 +90,9 @@ class PdfScanner extends React.Component<PdfScannerProps> {
     if (Platform.OS === 'android') {
       if (this.props.onPictureTaken !== prevProps.onPictureTaken) {
         if (prevProps.onPictureTaken)
-          DeviceEventEmitter.removeListener('onPictureTaken', prevProps.onPictureTaken)
+          DeviceEventEmitter.removeListener('onScanTaken', prevProps.onPictureTaken)
         if (this.props.onPictureTaken)
-          DeviceEventEmitter.addListener('onPictureTaken', this.props.onPictureTaken)
+          DeviceEventEmitter.addListener('onScanTaken', this.props.onPictureTaken)
       }
       if (this.props.onProcessing !== prevProps.onProcessing) {
         if (prevProps.onProcessing)
@@ -106,7 +106,7 @@ class PdfScanner extends React.Component<PdfScannerProps> {
   componentWillUnmount () {
     if (Platform.OS === 'android') {
       const { onPictureTaken, onProcessing } = this.props
-      if (onPictureTaken) DeviceEventEmitter.removeListener('onPictureTaken', onPictureTaken)
+      if (onPictureTaken) DeviceEventEmitter.removeListener('onScanTaken', onPictureTaken)
       if (onProcessing) DeviceEventEmitter.removeListener('onProcessingChange', onProcessing)
     }
   }
@@ -136,7 +136,7 @@ class PdfScanner extends React.Component<PdfScannerProps> {
       <RNPdfScanner
         ref={this._setReference}
         {...this.props}
-        onPictureTaken={this.sendOnPictureTakenEvent.bind(this)}
+        onScanTaken={this.sendOnPictureTakenEvent.bind(this)}
         onRectangleDetect={this.sendOnRectangleDetectEvent.bind(this)}
         useFrontCam={this.props.useFrontCam || false}
         brightness={this.props.brightness || 0}
