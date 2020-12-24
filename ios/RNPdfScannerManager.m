@@ -12,15 +12,15 @@
 
 @implementation RNPdfScannerManager
 
-- (dispatch_queue_t)methodQueue
-{
-    return dispatch_get_main_queue();
-}
+// - (dispatch_queue_t)methodQueue
+// {
+//     return dispatch_get_main_queue();
+// }
 
 RCT_EXPORT_MODULE()
 
-RCT_EXPORT_VIEW_PROPERTY(onScanTaken, RCTBubblingEventBlock)
-RCT_EXPORT_VIEW_PROPERTY(onRectangleDetect, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onScanTaken, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onRectangleDetect, RCTDirectEventBlock)
 
 RCT_EXPORT_VIEW_PROPERTY(overlayColor, UIColor)
 RCT_EXPORT_VIEW_PROPERTY(enableTorch, BOOL)
@@ -48,30 +48,30 @@ RCT_EXPORT_METHOD(processPickedImage:(NSString *)path callback:(RCTResponseSende
     [_scannerView detectImageRect:img callback:callback];
 }
 
-RCT_EXPORT_METHOD(capture:(nonnull NSNumber *)reactTag) {
+// RCT_EXPORT_METHOD(capture:(nonnull NSNumber *)reactTag) {
 
-    [_scannerView capture];
-}
-
-- (UIView*) view {
-    _scannerView = [[DocumentScannerView alloc] init];
-    return _scannerView;
-}
-
-// RCT_EXPORT_METHOD(capture:(nonnull NSNumber *)reactTag)
-// {
-//     [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, DocumentScannerView *> *viewRegistry) {
-//         DocumentScannerView *view = viewRegistry[reactTag];
-//         if (![view isKindOfClass:[DocumentScannerView class]]) {
-//             RCTLogError(@"Invalid view returned from registry, expecting DocumentScannerView, got: %@", view);
-//         } else {
-//             [view capture];
-//         }
-//     }];
+//     [_scannerView capture];
 // }
 
 // - (UIView*) view {
-//     return [DocumentScannerView new];
+//     _scannerView = [[DocumentScannerView alloc] init];
+//     return _scannerView;
 // }
+
+RCT_EXPORT_METHOD(capture:(nonnull NSNumber *)reactTag)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, DocumentScannerView *> *viewRegistry) {
+        DocumentScannerView *view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[DocumentScannerView class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting DocumentScannerView, got: %@", view);
+        } else {
+            [view capture];
+        }
+    }];
+}
+
+- (UIView*) view {
+    return [DocumentScannerView new];
+}
 
 @end

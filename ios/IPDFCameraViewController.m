@@ -234,7 +234,11 @@
 {
     _isStopped = NO;
 
-    [self.captureSession startRunning];
+    dispatch_queue_t globalQueue =  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    dispatch_async(globalQueue, ^{
+        [self.captureSession startRunning];
+    });
+    // [self.captureSession startRunning];
 
     float detectionRefreshRate = _detectionRefreshRateInMS;
     CGFloat detectionRefreshRateInSec = detectionRefreshRate/100;
@@ -255,7 +259,11 @@
 {
     _isStopped = YES;
 
-    [self.captureSession stopRunning];
+    dispatch_queue_t globalQueue =  dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+    dispatch_async(globalQueue, ^{
+        [self.captureSession stopRunning];
+    });
+    // [self.captureSession stopRunning];
 
     [_borderDetectTimeKeeper invalidate];
 
@@ -505,7 +513,7 @@
 
 - (UIImage *)doBinarize:(UIImage *)sourceImage
 {
-    [self start];
+    // [self start];
     UIImageOrientation orientation = sourceImage.imageOrientation;
     CIImage* image = [CIImage imageWithCGImage:sourceImage.CGImage];
     CIContext *context = [CIContext contextWithOptions:nil];
