@@ -82,6 +82,7 @@ class PdfScanner extends React.Component {
   };
 
   render () {
+    // 1
     return (
       <RNPdfScanner
         ref={this._setReference}
