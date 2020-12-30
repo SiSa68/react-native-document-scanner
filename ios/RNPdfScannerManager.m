@@ -36,6 +36,13 @@ RCT_EXPORT_VIEW_PROPERTY(quality, float)
 RCT_EXPORT_VIEW_PROPERTY(brightness, float)
 RCT_EXPORT_VIEW_PROPERTY(contrast, float)
 
+RCT_EXPORT_METHOD(start) {
+  [_scannerView start];
+}
+
+RCT_EXPORT_METHOD(stop) {
+  [_scannerView stop];
+}
 
 RCT_EXPORT_METHOD(processPickedImage:(NSString *)path callback:(RCTResponseSenderBlock)callback) {
 
@@ -71,7 +78,9 @@ RCT_EXPORT_METHOD(capture:(nonnull NSNumber *)reactTag)
 }
 
 - (UIView*) view {
-    return [DocumentScannerView new];
+    _scannerView = [DocumentScannerView new];
+    return _scannerView;
+    // return [DocumentScannerView new];
 }
 
 @end
