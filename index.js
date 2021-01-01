@@ -70,13 +70,15 @@ class PdfScanner extends React.Component {
   }
 
   start () {
-    console.log('this is start');
-    ScannerManager.start();
+    // console.log('this is start');
+    if (this._scannerHandle)
+      ScannerManager.start(this._scannerHandle);
   }
 
   stop () {
-    console.log('this is stop');
-    ScannerManager.stop();
+    // console.log('this is stop');
+    if (this._scannerHandle)
+      ScannerManager.stop(this._scannerHandle);
   }
 
   _scannerRef = null;

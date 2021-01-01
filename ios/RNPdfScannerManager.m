@@ -36,12 +36,29 @@ RCT_EXPORT_VIEW_PROPERTY(quality, float)
 RCT_EXPORT_VIEW_PROPERTY(brightness, float)
 RCT_EXPORT_VIEW_PROPERTY(contrast, float)
 
-RCT_EXPORT_METHOD(start) {
-  [_scannerView start];
+RCT_EXPORT_METHOD(start:(nonnull NSNumber *)reactTag)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, DocumentScannerView *> *viewRegistry) {
+        DocumentScannerView *view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[DocumentScannerView class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting DocumentScannerView, got: %@", view);
+        } else {
+            [view setupCameraView];
+            [view start];
+        }
+    }];
 }
 
-RCT_EXPORT_METHOD(stop) {
-  [_scannerView stop];
+RCT_EXPORT_METHOD(stop:(nonnull NSNumber *)reactTag)
+{
+    [self.bridge.uiManager addUIBlock:^(__unused RCTUIManager *uiManager, NSDictionary<NSNumber *, DocumentScannerView *> *viewRegistry) {
+        DocumentScannerView *view = viewRegistry[reactTag];
+        if (![view isKindOfClass:[DocumentScannerView class]]) {
+            RCTLogError(@"Invalid view returned from registry, expecting DocumentScannerView, got: %@", view);
+        } else {
+            [view stop];
+        }
+    }];
 }
 
 RCT_EXPORT_METHOD(processPickedImage:(NSString *)path callback:(RCTResponseSenderBlock)callback) {

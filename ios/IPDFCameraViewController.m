@@ -518,30 +518,46 @@
 
 - (UIImage *)doBinarize:(UIImage *)sourceImage
 {
-    // [self start];
     UIImageOrientation orientation = sourceImage.imageOrientation;
-    CIImage* image = [CIImage imageWithCGImage:sourceImage.CGImage];
+    CIImage* image = [CIImage imageWithCGImage:[self convertToGrayscale:sourceImage].CGImage];
+    CIImage *inputGradientImage = [CIImage imageWithCGImage:[UIImage imageNamed:@"grad.png"].CGImage];;
+    // CIImage *inputGradientImage = [CIImage imageWithContentsOfURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"grad" ofType:@"png"]]];
     CIContext *context = [CIContext contextWithOptions:nil];
-    
-//    CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectTransfer"];
-//    [filter setValue:image forKey:kCIInputImageKey];
-    
-    CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues: kCIInputImageKey,image, nil];
-    
-//    CIFilter *filter= [CIFilter filterWithName:@"CIColorControls"];
-//    [filter setValue:image forKey:@"inputImage"];
-//    [filter setValue:[NSNumber numberWithFloat:0.6] forKey:@"inputSaturation"];
-////    [filter setValue:[NSNumber numberWithFloat:0.2] forKey:@"inputBrightness"];
-//    [filter setValue:[NSNumber numberWithFloat:1.5] forKey:@"inputContrast"];//1.05
-    
+    CIFilter *filter = [CIFilter filterWithName:@"CIColorMap" keysAndValues:kCIInputImageKey, image, @"inputGradientImage",inputGradientImage, nil];
     CIImage *outputImage = [filter outputImage];
     CGImageRef cgimg = [context createCGImage:outputImage fromRect:[outputImage extent]];
-    UIImage *newPhoto = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
+    UIImage *newImage = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
     CGImageRelease(cgimg);
     context = nil;
-//    return newPhoto;
-    return [self grayImage:newPhoto];
+    return newImage;
+
+
+//     // [self start];
+//     UIImageOrientation orientation = sourceImage.imageOrientation;
+//     CIImage* image = [CIImage imageWithCGImage:sourceImage.CGImage];
+//     CIContext *context = [CIContext contextWithOptions:nil];
     
+// //    CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectTransfer"];
+// //    [filter setValue:image forKey:kCIInputImageKey];
+    
+//     CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues: kCIInputImageKey,image, nil];
+    
+// //    CIFilter *filter= [CIFilter filterWithName:@"CIColorControls"];
+// //    [filter setValue:image forKey:@"inputImage"];
+// //    [filter setValue:[NSNumber numberWithFloat:0.6] forKey:@"inputSaturation"];
+// ////    [filter setValue:[NSNumber numberWithFloat:0.2] forKey:@"inputBrightness"];
+// //    [filter setValue:[NSNumber numberWithFloat:1.5] forKey:@"inputContrast"];//1.05
+    
+//     CIImage *outputImage = [filter outputImage];
+//     CGImageRef cgimg = [context createCGImage:outputImage fromRect:[outputImage extent]];
+//     UIImage *newPhoto = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
+//     CGImageRelease(cgimg);
+//     context = nil;
+// //    return newPhoto;
+//     return [self grayImage:newPhoto];
+    
+
+
     /*
     CIContext *imageContext = [CIContext contextWithOptions:nil];
     CIImage *image = [[CIImage alloc] initWithImage:sourceImage];
@@ -580,6 +596,22 @@
 
 //     UIImage *retImage = [stillImageFilter imageFromCurrentlyProcessedOutput];
 //     return retImage;
+}
+
+- (UIImage *) convertToGrayscale :(UIImage *)inputImage
+{    
+    UIImageOrientation orientation = inputImage.imageOrientation;
+    CIImage* image = [CIImage imageWithCGImage:inputImage.CGImage];
+    CIContext *context = [CIContext contextWithOptions:nil];
+    
+    CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues: kCIInputImageKey,image, nil];
+    
+    CIImage *outputImage = [filter outputImage];
+    CGImageRef cgimg = [context createCGImage:outputImage fromRect:[outputImage extent]];
+    UIImage *newPhoto = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
+    CGImageRelease(cgimg);
+    context = nil;
+    return newPhoto;
 }
 
 - (UIImage *) grayImage :(UIImage *)inputImage
