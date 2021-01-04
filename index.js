@@ -21,6 +21,11 @@ class PdfScanner extends React.Component {
     return this.props.onRectangleDetect(event.nativeEvent)
   }
 
+  sendOnStartProcessingEvent (event) {
+    if (!this.props.onProcessing) return null
+    return this.props.onProcessing(event.nativeEvent)
+  }
+
   getImageQuality () {
     if (!this.props.quality) return 0.8
     if (this.props.quality > 1) return 1
@@ -101,6 +106,7 @@ class PdfScanner extends React.Component {
         {...this.props}
         onScanTaken={this.sendOnPictureTakenEvent.bind(this)}
         onRectangleDetect={this.sendOnRectangleDetectEvent.bind(this)}
+        onProcessing={this.sendOnStartProcessingEvent.bind(this)}
         useFrontCam={this.props.useFrontCam || false}
         brightness={this.props.brightness || 0}
         saturation={this.props.saturation || 1}

@@ -13,6 +13,11 @@
     return self;
 }
 
+- (void) startProcessing {
+    if (self.onProcessing) {
+        self.onProcessing(@{});
+    }
+}
 
 - (void) didDetectRectangle:(CIRectangleFeature *)rectangle withType:(IPDFRectangeType)type {
     switch (type) {

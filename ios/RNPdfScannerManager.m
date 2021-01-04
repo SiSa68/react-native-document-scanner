@@ -21,6 +21,7 @@ RCT_EXPORT_MODULE()
 
 RCT_EXPORT_VIEW_PROPERTY(onScanTaken, RCTDirectEventBlock)
 RCT_EXPORT_VIEW_PROPERTY(onRectangleDetect, RCTDirectEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onProcessing, RCTDirectEventBlock)
 
 RCT_EXPORT_VIEW_PROPERTY(overlayColor, UIColor)
 RCT_EXPORT_VIEW_PROPERTY(enableTorch, BOOL)

@@ -5,6 +5,7 @@
 
 @property (nonatomic, copy) RCTDirectEventBlock onScanTaken;
 @property (nonatomic, copy) RCTDirectEventBlock onRectangleDetect;
+@property (nonatomic, copy) RCTDirectEventBlock onProcessing;
 @property (nonatomic, assign) NSInteger detectionCountBeforeCapture;
 @property (nonatomic, assign) NSInteger stableCounter;
 @property (nonatomic, assign) double durationBetweenCaptures;

@@ -443,61 +443,68 @@
 
     [self.stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler: ^(CMSampleBufferRef imageSampleBuffer, NSError *error)
      {
+         if (self.delegate) {
+            [self.delegate startProcessing];
+         }
+         
          NSData *imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageSampleBuffer];
 
-         if (weakSelf.cameraViewType == IPDFCameraViewTypeBlackAndWhite || weakSelf.isBorderDetectionEnabled)
+         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^
          {
-             CIImage *enhancedImage = [CIImage imageWithData:imageData];
+            if (weakSelf.cameraViewType == IPDFCameraViewTypeBlackAndWhite || weakSelf.isBorderDetectionEnabled)
+            {
+                CIImage *enhancedImage = [CIImage imageWithData:imageData];
 
-             if (weakSelf.cameraViewType == IPDFCameraViewTypeBlackAndWhite)
-             {
-                 enhancedImage = [self filteredImageUsingEnhanceFilterOnImage:enhancedImage];
-             }
-             else
-             {
-                 enhancedImage = [self filteredImageUsingContrastFilterOnImage:enhancedImage];
-             }
+                if (weakSelf.cameraViewType == IPDFCameraViewTypeBlackAndWhite)
+                {
+                    enhancedImage = [self filteredImageUsingEnhanceFilterOnImage:enhancedImage];
+                }
+                else
+                {
+                    enhancedImage = [self filteredImageUsingContrastFilterOnImage:enhancedImage];
+                }
 
-             if (weakSelf.isBorderDetectionEnabled && rectangleDetectionConfidenceHighEnough(weakSelf.imageDetectionConfidence))
-             {
-                 CIRectangleFeature *rectangleFeature = [self biggestRectangleInRectangles:[[self highAccuracyRectangleDetector] featuresInImage:enhancedImage]];
+                if (weakSelf.isBorderDetectionEnabled && rectangleDetectionConfidenceHighEnough(weakSelf.imageDetectionConfidence))
+                {
+                    CIRectangleFeature *rectangleFeature = [self biggestRectangleInRectangles:[[self highAccuracyRectangleDetector] featuresInImage:enhancedImage]];
 
-                 if (rectangleFeature)
-                 {
-                     enhancedImage = [self correctPerspectiveForImage:enhancedImage withFeatures:rectangleFeature];
+                    if (rectangleFeature)
+                    {
+                        enhancedImage = [self correctPerspectiveForImage:enhancedImage withFeatures:rectangleFeature];
 
-                     UIGraphicsBeginImageContext(CGSizeMake(enhancedImage.extent.size.height, enhancedImage.extent.size.width));
-                     [[UIImage imageWithCIImage:enhancedImage scale:1.0 orientation:UIImageOrientationRight] drawInRect:CGRectMake(0,0, enhancedImage.extent.size.height, enhancedImage.extent.size.width)];
-                     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-                     UIImage *initialImage = [UIImage imageWithData:imageData];
-                     UIGraphicsEndImageContext();
+                        UIGraphicsBeginImageContext(CGSizeMake(enhancedImage.extent.size.height, enhancedImage.extent.size.width));
+                        [[UIImage imageWithCIImage:enhancedImage scale:1.0 orientation:UIImageOrientationRight] drawInRect:CGRectMake(0,0, enhancedImage.extent.size.height, enhancedImage.extent.size.width)];
+                        UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+                        UIImage *initialImage = [UIImage imageWithData:imageData];
+                        UIGraphicsEndImageContext();
 
-                     UIImage *filteredImage = [self doBinarize:initialImage];
-                     UIImage *cropedImage = [self doBinarize:image];
+                        UIImage *filteredImage = [self doBinarize:initialImage];
+                        UIImage *cropedImage = [self doBinarize:image];
 
-                     [weakSelf hideGLKView:NO completion:nil];
-                     completionHandler(cropedImage, filteredImage, rectangleFeature);
-                 } else {
-                     [weakSelf hideGLKView:NO completion:nil];
-                     UIImage *initialImage = [UIImage imageWithData:imageData];
-                     UIImage *filteredImage = [self doBinarize:initialImage];
-                     completionHandler(filteredImage, filteredImage, nil);
-                 }
-             } else {
-                 [weakSelf hideGLKView:NO completion:nil];
-                 UIImage *initialImage = [UIImage imageWithData:imageData];
-                 UIImage *filteredImage = [self doBinarize:initialImage];
-                 completionHandler(filteredImage, filteredImage, nil);
-             }
+                        [weakSelf hideGLKView:NO completion:nil];
+                        completionHandler(cropedImage, filteredImage, rectangleFeature);
+                    } else {
+                        [weakSelf hideGLKView:NO completion:nil];
+                        UIImage *initialImage = [UIImage imageWithData:imageData];
+                        UIImage *filteredImage = [self doBinarize:initialImage];
+                        completionHandler(filteredImage, filteredImage, nil);
+                    }
+                } else {
+                    [weakSelf hideGLKView:NO completion:nil];
+                    UIImage *initialImage = [UIImage imageWithData:imageData];
+                    UIImage *filteredImage = [self doBinarize:initialImage];
+                    completionHandler(filteredImage, filteredImage, nil);
+                }
 
-         }
-         else
-         {
-             [weakSelf hideGLKView:NO completion:nil];
-             UIImage *initialImage = [UIImage imageWithData:imageData];
-             UIImage *filteredImage = [self doBinarize:initialImage];
-             completionHandler(filteredImage, filteredImage, nil);
-         }
+            }
+            else
+            {
+                [weakSelf hideGLKView:NO completion:nil];
+                UIImage *initialImage = [UIImage imageWithData:imageData];
+                UIImage *filteredImage = [self doBinarize:initialImage];
+                completionHandler(filteredImage, filteredImage, nil);
+            }
+         });
 
          weakSelf.isCapturing = NO;
      }];
