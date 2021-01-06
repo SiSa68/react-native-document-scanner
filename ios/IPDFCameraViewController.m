@@ -57,11 +57,14 @@
 - (void)_backgroundMode
 {
     self.forceStop = YES;
+    [self stop];
 }
 
 - (void)_foregroundMode
 {
     self.forceStop = NO;
+    [self setupCameraView];
+    [self start];
 }
 
 - (void)invalidate
@@ -525,18 +528,50 @@
 
 - (UIImage *)doBinarize:(UIImage *)sourceImage
 {
+    NSNumber *sharp = 5;
+    NSNumber *brightness = 0.2;
+    NSNumber *contrast = 1.5;
+    NSNumber *shadow = 1;
+    NSNumber *ev = 1;
+    // NSNumber *bw = 4;
+
+
     UIImageOrientation orientation = sourceImage.imageOrientation;
-    CIImage* image = [CIImage imageWithCGImage:[self convertToGrayscale:sourceImage].CGImage];
-    CIImage *inputGradientImage = [CIImage imageWithCGImage:[UIImage imageNamed:@"grad.png"].CGImage];;
-    // CIImage *inputGradientImage = [CIImage imageWithContentsOfURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"grad" ofType:@"png"]]];
+    CIImage* image = [CIImage imageWithCGImage:sourceImage.CGImage];
+
+    image = [CIFilter filterWithName:@"CISharpenLuminance" keysAndValues:kCIInputImageKey, image, @"inputSharpness", sharp, nil].outputImage;
+    image = [CIFilter filterWithName:@"CIColorControls" keysAndValues:kCIInputImageKey, image, @"inputBrightness", brightness, @"inputContrast", contrast, @"inputSaturation", @1, nil].outputImage;
+    image = [CIFilter filterWithName:@"CIHighlightShadowAdjust" keysAndValues:kCIInputImageKey, image, @"inputHighlightAmount", @1, @"inputShadowAmount", shadow, nil].outputImage;
+    image = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues:kCIInputImageKey, image, nil].outputImage;
+    image = [CIFilter filterWithName:@"CIExposureAdjust" keysAndValues:kCIInputImageKey, image, @"inputEV", ev, nil].outputImage;
+
+    // NSString *imageName = [NSString stringWithFormat:@"grad%d.png", [bw intValue]];
+    // CIImage *inputGradientImage = [CIImage imageWithCGImage:[UIImage imageNamed:imageName].CGImage];
+    CIImage *inputGradientImage = [CIImage imageWithCGImage:[UIImage imageNamed:@"grad.png"].CGImage];
+    image = [CIFilter filterWithName:@"CIColorMap" keysAndValues:kCIInputImageKey, image, @"inputGradientImage",inputGradientImage, nil].outputImage;
+
     CIContext *context = [CIContext contextWithOptions:nil];
-    CIFilter *filter = [CIFilter filterWithName:@"CIColorMap" keysAndValues:kCIInputImageKey, image, @"inputGradientImage",inputGradientImage, nil];
-    CIImage *outputImage = [filter outputImage];
-    CGImageRef cgimg = [context createCGImage:outputImage fromRect:[outputImage extent]];
+    CGImageRef cgimg = [context createCGImage:image fromRect:[image extent]];
     UIImage *newImage = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
     CGImageRelease(cgimg);
     context = nil;
     return newImage;
+
+
+
+    // UIImageOrientation orientation = sourceImage.imageOrientation;
+    // CIImage* image = [CIImage imageWithCGImage:[self convertToGrayscale:sourceImage].CGImage];
+    // CIImage *inputGradientImage = [CIImage imageWithCGImage:[UIImage imageNamed:@"grad.png"].CGImage];
+    // // CIImage *inputGradientImage = [CIImage imageWithContentsOfURL:[NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"grad" ofType:@"png"]]];
+    // CIContext *context = [CIContext contextWithOptions:nil];
+    // CIFilter *filter = [CIFilter filterWithName:@"CIColorMap" keysAndValues:kCIInputImageKey, image, @"inputGradientImage",inputGradientImage, nil];
+    // CIImage *outputImage = [filter outputImage];
+    // CGImageRef cgimg = [context createCGImage:outputImage fromRect:[outputImage extent]];
+    // UIImage *newImage = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
+    // CGImageRelease(cgimg);
+    // context = nil;
+    // return newImage;
+
 
 
 //     // [self start];
@@ -605,38 +640,38 @@
 //     return retImage;
 }
 
-- (UIImage *) convertToGrayscale :(UIImage *)inputImage
-{    
-    UIImageOrientation orientation = inputImage.imageOrientation;
-    CIImage* image = [CIImage imageWithCGImage:inputImage.CGImage];
-    CIContext *context = [CIContext contextWithOptions:nil];
+// - (UIImage *) convertToGrayscale :(UIImage *)inputImage
+// {    
+//     UIImageOrientation orientation = inputImage.imageOrientation;
+//     CIImage* image = [CIImage imageWithCGImage:inputImage.CGImage];
+//     CIContext *context = [CIContext contextWithOptions:nil];
     
-    CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues: kCIInputImageKey,image, nil];
+//     CIFilter *filter = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues: kCIInputImageKey,image, nil];
     
-    CIImage *outputImage = [filter outputImage];
-    CGImageRef cgimg = [context createCGImage:outputImage fromRect:[outputImage extent]];
-    UIImage *newPhoto = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
-    CGImageRelease(cgimg);
-    context = nil;
-    return newPhoto;
-}
+//     CIImage *outputImage = [filter outputImage];
+//     CGImageRef cgimg = [context createCGImage:outputImage fromRect:[outputImage extent]];
+//     UIImage *newPhoto = [UIImage imageWithCGImage:cgimg scale:1.0 orientation:orientation];
+//     CGImageRelease(cgimg);
+//     context = nil;
+//     return newPhoto;
+// }
 
-- (UIImage *) grayImage :(UIImage *)inputImage
-{    
-    // Create a graphic context.
-    UIGraphicsBeginImageContextWithOptions(inputImage.size, YES, 1.0);
-    CGRect imageRect = CGRectMake(0, 0, inputImage.size.width, inputImage.size.height);
+// - (UIImage *) grayImage :(UIImage *)inputImage
+// {    
+//     // Create a graphic context.
+//     UIGraphicsBeginImageContextWithOptions(inputImage.size, YES, 1.0);
+//     CGRect imageRect = CGRectMake(0, 0, inputImage.size.width, inputImage.size.height);
 
-    // Draw the image with the luminosity blend mode.
-    // On top of a white background, this will give a black and white image.
-    [inputImage drawInRect:imageRect blendMode:kCGBlendModeLuminosity alpha:1.0];
+//     // Draw the image with the luminosity blend mode.
+//     // On top of a white background, this will give a black and white image.
+//     [inputImage drawInRect:imageRect blendMode:kCGBlendModeLuminosity alpha:1.0];
 
-    // Get the resulting image.
-    UIImage *outputImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
+//     // Get the resulting image.
+//     UIImage *outputImage = UIGraphicsGetImageFromCurrentImageContext();
+//     UIGraphicsEndImageContext();
 
-    return outputImage;
-}
+//     return outputImage;
+// }
 
 - (CIImage *)filteredImageUsingEnhanceFilterOnImage:(CIImage *)image
 {
