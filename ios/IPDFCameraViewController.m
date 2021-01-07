@@ -528,12 +528,12 @@
 
 - (UIImage *)doBinarize:(UIImage *)sourceImage
 {
-    NSNumber *sharp = 5;
-    NSNumber *brightness = 0.2;
-    NSNumber *contrast = 1.5;
-    NSNumber *shadow = 1;
-    NSNumber *ev = 1;
-    // NSNumber *bw = 4;
+    NSNumber *sharp = @(5);
+    NSNumber *brightness = @(0.2);
+    NSNumber *contrast = @(1.5);
+    NSNumber *shadow = @(1);
+    NSNumber *ev = @(1);
+    // NSNumber *bw = @(4);
 
 
     UIImageOrientation orientation = sourceImage.imageOrientation;
