@@ -186,20 +186,21 @@
 
     CIImage *image = [CIImage imageWithCVPixelBuffer:pixelBuffer];
 
-    if (self.cameraViewType != IPDFCameraViewTypeNormal)
-    {
-        image = [self filteredImageUsingEnhanceFilterOnImage:image];
-    }
-    else
-    {
-        image = [self filteredImageUsingContrastFilterOnImage:image];
-    }
+    // if (self.cameraViewType != IPDFCameraViewTypeNormal)
+    // {
+    //     image = [self filteredImageUsingEnhanceFilterOnImage:image];
+    // }
+    // else
+    // {
+    //     image = [self filteredImageUsingContrastFilterOnImage:image];
+    // }
 
     if (self.isBorderDetectionEnabled)
     {
         if (_borderDetectFrame)
         {
-            _borderDetectLastRectangleFeature = [self biggestRectangleInRectangles:[[self highAccuracyRectangleDetector] featuresInImage:image]];
+            _borderDetectLastRectangleFeature = [self detectRectangle::image];
+            // _borderDetectLastRectangleFeature = [self biggestRectangleInRectangles:[[self highAccuracyRectangleDetector] featuresInImage:image]];
             _borderDetectFrame = NO;
         }
 
@@ -458,18 +459,19 @@
             {
                 CIImage *enhancedImage = [CIImage imageWithData:imageData];
 
-                if (weakSelf.cameraViewType == IPDFCameraViewTypeBlackAndWhite)
-                {
-                    enhancedImage = [self filteredImageUsingEnhanceFilterOnImage:enhancedImage];
-                }
-                else
-                {
-                    enhancedImage = [self filteredImageUsingContrastFilterOnImage:enhancedImage];
-                }
+                // if (weakSelf.cameraViewType == IPDFCameraViewTypeBlackAndWhite)
+                // {
+                //     enhancedImage = [self filteredImageUsingEnhanceFilterOnImage:enhancedImage];
+                // }
+                // else
+                // {
+                //     enhancedImage = [self filteredImageUsingContrastFilterOnImage:enhancedImage];
+                // }
 
                 if (weakSelf.isBorderDetectionEnabled && rectangleDetectionConfidenceHighEnough(weakSelf.imageDetectionConfidence))
                 {
-                    CIRectangleFeature *rectangleFeature = [self biggestRectangleInRectangles:[[self highAccuracyRectangleDetector] featuresInImage:enhancedImage]];
+                    CIRectangleFeature *rectangleFeature = [self detectRectangle:enhancedImage];
+                    // CIRectangleFeature *rectangleFeature = [self biggestRectangleInRectangles:[[self highAccuracyRectangleDetector] featuresInImage:enhancedImage]];
 
                     if (rectangleFeature)
                     {
@@ -700,6 +702,81 @@
   return [image imageByApplyingFilter:@"CIPerspectiveCorrection" withInputParameters:rectangleCoordinates];
 }
 
+- (CIImage *)filteredImage1:(CIImage *)sourceImage
+{
+    NSNumber *sharp = @(8);
+    NSNumber *brightness = @(0.2);
+    NSNumber *contrast = @(2);
+    NSNumber *shadow = @(1);
+    NSNumber *ev = @(8);
+    // NSNumber *bw = @(4);
+    
+    CIImage* image = sourceImage;
+
+    image = [CIFilter filterWithName:@"CISharpenLuminance" keysAndValues:kCIInputImageKey, image, @"inputSharpness", sharp, nil].outputImage;
+    image = [CIFilter filterWithName:@"CIColorControls" keysAndValues:kCIInputImageKey, image, @"inputBrightness", brightness, @"inputContrast", contrast, @"inputSaturation", @1, nil].outputImage;
+    image = [CIFilter filterWithName:@"CIHighlightShadowAdjust" keysAndValues:kCIInputImageKey, image, @"inputHighlightAmount", @1, @"inputShadowAmount", shadow, nil].outputImage;
+    image = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues:kCIInputImageKey, image, nil].outputImage;
+    image = [CIFilter filterWithName:@"CIExposureAdjust" keysAndValues:kCIInputImageKey, image, @"inputEV", ev, nil].outputImage;
+
+    // CIImage *inputGradientImage = [CIImage imageWithCGImage:[UIImage imageNamed:@"grad.png"].CGImage];
+    // image = [CIFilter filterWithName:@"CIColorMap" keysAndValues:kCIInputImageKey, image, @"inputGradientImage",inputGradientImage, nil].outputImage;
+
+    return image;
+}
+
+- (CIImage *)filteredImage2:(CIImage *)sourceImage
+{
+
+    NSNumber *sharp = @(2);
+    NSNumber *brightness = @(0.5);
+    NSNumber *contrast = @(2);
+    NSNumber *shadow = @(1);
+    NSNumber *ev = @(1);
+    // NSNumber *bw = @(4);
+    
+    CIImage* outputImage = sourceImage;
+
+    outputImage = [CIFilter filterWithName:@"CISharpenLuminance" keysAndValues:kCIInputImageKey, outputImage, @"inputSharpness", sharp, nil].outputImage;
+    outputImage = [CIFilter filterWithName:@"CIColorControls" keysAndValues:kCIInputImageKey, outputImage, @"inputBrightness", brightness, @"inputContrast", contrast, @"inputSaturation", @1, nil].outputImage;
+    outputImage = [CIFilter filterWithName:@"CIHighlightShadowAdjust" keysAndValues:kCIInputImageKey, outputImage, @"inputHighlightAmount", @1, @"inputShadowAmount", shadow, nil].outputImage;
+    outputImage = [CIFilter filterWithName:@"CIPhotoEffectNoir" keysAndValues:kCIInputImageKey, outputImage, nil].outputImage;
+    outputImage = [CIFilter filterWithName:@"CIExposureAdjust" keysAndValues:kCIInputImageKey, outputImage, @"inputEV", ev, nil].outputImage;
+
+
+
+    // CIImage *outputImage = sourceImage;
+    // // Your Idea to enhance contrast.
+    // CIFilter *ciColorMonochrome = [CIFilter filterWithName:@"CIColorMonochrome"];
+    // [ciColorMonochrome setValue:outputImage forKey:kCIInputImageKey];
+    // [ciColorMonochrome setValue:@(1) forKey:@"inputIntensity"];
+    // [ciColorMonochrome setValue:[[CIColor alloc] initWithColor:[UIColor whiteColor]] forKey:@"inputColor"];// Black and white
+    // outputImage = [ciColorMonochrome valueForKey:kCIOutputImageKey];
+
+    // Now go on with edge detection
+     CIFilter *ciEdges = [CIFilter filterWithName:@"CIEdges"];
+    // outputImage = [CIFilter filterWithName:@"CIEdgeWork"
+    //                         keysAndValues:kCIInputImageKey,outputImage,
+    //                         @"inputRadius",[NSNumber numberWithFloat:3.0],
+    //                         nil].outputImage;
+    [ciEdges setValue:outputImage forKey:kCIInputImageKey];
+    [ciEdges setValue:@(5) forKey:@"inputIntensity"];
+    outputImage = [ciEdges valueForKey:kCIOutputImageKey];
+
+    return outputImage;
+}
+
+- (CIRectangleFeature *) detectRectangle:(CIImage *)sourceImage
+{
+    NSMutableArray *rects = [NSMutableArray array];
+    NSMutableArray *r = [[self highAccuracyRectangleDetector] featuresInImage:[self filteredImage1:sourceImage]];
+    if ([r count]) [rects addObjectsFromArray:r];
+    r = [[self highAccuracyRectangleDetector] featuresInImage:[self filteredImage2:sourceImage]];
+    if ([r count]) [rects addObjectsFromArray:r];
+
+    return [self biggestRectangleInRectangles:rects];
+}
+
 - (CIDetector *)rectangleDetetor
 {
     static CIDetector *detector = nil;
@@ -717,7 +794,7 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^
     {
-        detector = [CIDetector detectorOfType:CIDetectorTypeRectangle context:nil options:@{CIDetectorAccuracy : CIDetectorAccuracyHigh, CIDetectorReturnSubFeatures: @(YES) }];
+        detector = [CIDetector detectorOfType:CIDetectorTypeRectangle context:nil options:@{CIDetectorAccuracy : CIDetectorAccuracyHigh, CIDetectorReturnSubFeatures: @(YES), CIDetectorMaxFeatureCount: @5 }];
     });
     return detector;
 }
@@ -729,28 +806,33 @@
     float halfPerimiterValue = 0;
 
     CIRectangleFeature *biggestRectangle = [rectangles firstObject];
+    IPDFRectangeType *biggestRectangleType = [self typeForRectangle:biggestRectangle];
 
     for (CIRectangleFeature *rect in rectangles)
     {
-        CGPoint p1 = rect.topLeft;
-        CGPoint p2 = rect.topRight;
-        CGFloat width = hypotf(p1.x - p2.x, p1.y - p2.y);
+        IPDFRectangeType *type = [self typeForRectangle:rect];
+        if(biggestRectangleType != IPDFRectangeTypeGood || type == IPDFRectangeTypeGood) {
+            CGPoint p1 = rect.topLeft;
+            CGPoint p2 = rect.topRight;
+            CGFloat width = hypotf(p1.x - p2.x, p1.y - p2.y);
 
-        CGPoint p3 = rect.topLeft;
-        CGPoint p4 = rect.bottomLeft;
-        CGFloat height = hypotf(p3.x - p4.x, p3.y - p4.y);
+            CGPoint p3 = rect.topLeft;
+            CGPoint p4 = rect.bottomLeft;
+            CGFloat height = hypotf(p3.x - p4.x, p3.y - p4.y);
 
-        CGFloat currentHalfPerimiterValue = height + width;
+            CGFloat currentHalfPerimiterValue = height + width;
 
-        if (halfPerimiterValue < currentHalfPerimiterValue)
-        {
-            halfPerimiterValue = currentHalfPerimiterValue;
-            biggestRectangle = rect;
+            if (halfPerimiterValue < currentHalfPerimiterValue)
+            {
+                halfPerimiterValue = currentHalfPerimiterValue;
+                biggestRectangle = rect;
+                biggestRectangleType = type;
+            }
         }
     }
 
     if (self.delegate) {
-        [self.delegate didDetectRectangle:biggestRectangle withType:[self typeForRectangle:biggestRectangle]];
+        [self.delegate didDetectRectangle:biggestRectangle withType:biggestRectangleType];
     }
 
     return biggestRectangle;
