@@ -199,7 +199,7 @@
     {
         if (_borderDetectFrame)
         {
-            _borderDetectLastRectangleFeature = [self detectRectangle::image];
+            _borderDetectLastRectangleFeature = [self detectRectangle:image];
             // _borderDetectLastRectangleFeature = [self biggestRectangleInRectangles:[[self highAccuracyRectangleDetector] featuresInImage:image]];
             _borderDetectFrame = NO;
         }
@@ -794,7 +794,7 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^
     {
-        detector = [CIDetector detectorOfType:CIDetectorTypeRectangle context:nil options:@{CIDetectorAccuracy : CIDetectorAccuracyHigh, CIDetectorReturnSubFeatures: @(YES), CIDetectorMaxFeatureCount: @5 }];
+        detector = [CIDetector detectorOfType:CIDetectorTypeRectangle context:nil options:@{CIDetectorAccuracy : CIDetectorAccuracyHigh, CIDetectorReturnSubFeatures: @(YES), CIDetectorMaxFeatureCount: @(5) }];
     });
     return detector;
 }
@@ -806,11 +806,11 @@
     float halfPerimiterValue = 0;
 
     CIRectangleFeature *biggestRectangle = [rectangles firstObject];
-    IPDFRectangeType *biggestRectangleType = [self typeForRectangle:biggestRectangle];
+    IPDFRectangeType biggestRectangleType = [self typeForRectangle:biggestRectangle];
 
     for (CIRectangleFeature *rect in rectangles)
     {
-        IPDFRectangeType *type = [self typeForRectangle:rect];
+        IPDFRectangeType type = [self typeForRectangle:rect];
         if(biggestRectangleType != IPDFRectangeTypeGood || type == IPDFRectangeTypeGood) {
             CGPoint p1 = rect.topLeft;
             CGPoint p2 = rect.topRight;
